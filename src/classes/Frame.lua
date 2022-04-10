@@ -2,13 +2,13 @@
 local Vector2 = require("src/classes/Vector2")
 local Color = require("src/classes/Color")
 local Object = require("src/libs/Classic")
-local ErrorMessage = require("src/libs/ErrorMessage")
 
 local UI = require("src/libs/UIEngine")
+local ErrorMessage = require("src/libs/ErrorMessage")
 
 -- CLASS
 local class = Object:extend("Frame")
-class.AllowedEvents = {"Hover"}
+class.AllowedEvents = {"Hover", "MouseClicked"}
 
 function class:new(x, y, w, h)
     -- UI Properties
@@ -37,11 +37,17 @@ function class:new(x, y, w, h)
 end
 
 -- EVENTS
-
+function class:MouseClicked()
+    MouseClicked:Connect(function(bool)
+        if self:IsHovering() then
+            self._Connections.MouseClicked(bool)
+        end
+    end)
+end
 
 -- METHODS
 function class:Ratio(AspectRatio)
-
+    rawset(self, "AspectRatio", AspectRatio)
 end
 
 function class:SetParent(Obj)
@@ -62,15 +68,31 @@ function class:GetChildren()
 end
 
 function class:GetDrawingCoordinates()
-    local Pos = typeof(self.Position) == "Vector2" and self.Position or self.Position:ToVector2(self, "Position")
-    local Size = typeof(self.Size) == "Vector2" and self.Size or self.Size:ToVector2(self, "Size")
+    --local Pos = typeof(self.Position) == "Vector2" and self.Position or self.Position:ToVector2(self, "Position")
+    --local Size = typeof(self.Size) == "Vector2" and self.Size or self.Size:ToVector2(self, "Size")
+
+    local OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = 0, 0, ScreenSize.X, ScreenSize.Y
+    if self.Parent then
+        OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = self.Parent:GetDrawingCoordinates()
+    end
+
+    local ParentPos = Vector2(OffsetX, OffsetY)
+    local ParentSize = Vector2(SizeOffsetX, SizeOffsetY)
+
+    local Size = self.Size:ToVector2(ParentSize)
+    local Pos = self.Position:ToVector2(ParentSize) + ParentPos
+
+    if rawget(self, "AspectRatio") then
+        local Min = math.min(Size.X, Size.Y) / self.AspectRatio
+        Size = Vector2(Min, Min)
+    end
 
     local PosX = Pos.X - Size.X*self.Anchor.X
     local PosY = Pos.Y - Size.Y*self.Anchor.Y
     local ScaleX = Size.X
     local ScaleY = Size.Y
 
-    return PosX, PosY, ScaleX, ScaleY
+    return math.floor(PosX), math.floor(PosY), math.floor(ScaleX), math.floor(ScaleY)
 end
 
 function class:Draw()
@@ -111,6 +133,9 @@ end
 
 function class:Connect(event, callback)
     if not table.find(class.AllowedEvents, event) then return error(("Attempt to connect instance '%s' to undefined event '%s'"):format(typeof(class), event)) end
+    if self._Connections[event] then return error("Cannot connect to the same event twice") end
+
+    if self.class[event] then self[event](self) end
     self._Connections[event] = callback
 end
 

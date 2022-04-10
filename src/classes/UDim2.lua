@@ -13,10 +13,24 @@ function class:new(ScaleX, OffsetX, ScaleY, OffsetY)
 end
 
 -- METHODS
+--[[
 function class:ToVector2(obj)
     local ParentSize = obj.Parent and obj.Parent.Size:ToVector2(obj.Parent) or ScreenSize
+    local ParentPosition = obj.Parent and obj.Parent.Position:ToVector2(obj.Parent) or Vector2(0, 0)
 
-    return Vector2(self.X.Scale * ParentSize.X + self.X.Offset, self.Y.Scale * ParentSize.Y + self.Y.Offset)
+    --if rawget(obj, "AspectRatio") then
+    --    local Min = math.min(ParentSize.X, ParentSize.Y) / obj.AspectRatio
+    --    ParentSize = Vector2(Min, Min)
+    --end
+
+    --print(obj, obj.Parent, ParentSize)
+    local Result = Vector2(self.X.Scale * ParentSize.X + self.X.Offset + ParentPosition.X, self.Y.Scale * ParentSize.Y + self.Y.Offset + ParentPosition.Y)
+    return Result
+end
+]]
+
+function class:ToVector2(Scale)
+    return Vector2(self.X.Scale * Scale.X + self.X.Offset, self.Y.Scale * Scale.Y + self.Y.Offset)
 end
 
 -- METATABLES
