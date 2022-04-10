@@ -3,6 +3,7 @@
 
 -- LIBS
 local ErrorMessage = require("src/libs/ErrorMessage")
+local Color = require("src/classes/Color")
 
 -- MODULE
 local Module = {}
@@ -60,7 +61,27 @@ function Module.Draw()
     end
 end
 
+function Module.MouseClickEvent(bool)
+    for i=#Module.Pool, 1, -1 do
+        local v = Module.Pool[i].Obj
+
+        if v._Connections["MouseClicked"] and v:IsHovering() then
+            return v._Connections["MouseClicked"](bool)
+        end
+    end
+end
+
+-- RUNNER
+function love.mousepressed()
+    Module.MouseClickEvent(true)
+end
+
+function love.mousereleased()
+    Module.MouseClickEvent(false)
+end
+
 -- EXPORT
+Color.FromRGB(54, 63, 77):Lerp(Color.Black, 0.5):ApplyBackground()
 return setmetatable(Module, {
     __newindex = function(self, index, value)
         return error(ErrorMessage.NewIndexLocked:format(index))

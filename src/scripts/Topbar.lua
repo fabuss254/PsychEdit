@@ -17,15 +17,37 @@ local Buttons = {
     "Help"
 }
 
--- Methods
+-- Script
 local Topbar = Frame()
+Topbar.META.IsMoving = false
 Topbar.Name = "Topbar"
 Topbar.Position = UDim2(0, 0, 0, 0)
 Topbar.Color = TopbarColor
 Topbar.Size = UDim2(1, 0, 0, 30)
 
+Topbar:Connect("MouseClicked", function(bool)
+    Topbar.META.IsMoving = bool
+    if bool then
+        local MousePos = GetMousePosition()
+        local WindowPos = Vector2(love.window.getPosition())
+        Topbar.META.MoveOffset = WindowPos-MousePos
+    end
+end)
+
+Topbar:Connect("Update", function(dt)
+    if not Topbar.META.IsMoving then return end
+    if not love.mouse.isDown() then
+        Topbar.META.IsMoving = false
+        return
+    end
+
+    local NewPos = GetMousePosition() + Topbar.META.MoveOffset
+    love.window.setPosition(NewPos.X, NewPos.Y)
+end)
+
 UI.Add(Topbar)
 
+--[[
 local Icons = {
     {Name = "close", Size = 0.6, OnClick = function()
         love.event.quit()
@@ -37,7 +59,6 @@ local Icons = {
         love.window.minimize()
     end},
 }
-
 
 for i,v in pairs(Icons) do
     local ButtonFrame = Frame()
@@ -68,3 +89,4 @@ for i,v in pairs(Icons) do
     ButtonIcon:SetParent(ButtonFrame)
 end
 
+]]

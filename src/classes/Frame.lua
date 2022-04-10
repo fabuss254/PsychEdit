@@ -8,7 +8,7 @@ local ErrorMessage = require("src/libs/ErrorMessage")
 
 -- CLASS
 local class = Object:extend("Frame")
-class.AllowedEvents = {"Hover", "MouseClicked"}
+class.AllowedEvents = {"Hover", "MouseClicked", "Update"}
 
 function class:new(x, y, w, h)
     -- UI Properties
@@ -33,17 +33,14 @@ function class:new(x, y, w, h)
     self._Childs = {}
     self.Parent = false
 
+    -- Others
+    self.META = {}
+
     return self
 end
 
 -- EVENTS
-function class:MouseClicked()
-    MouseClicked:Connect(function(bool)
-        if self:IsHovering() then
-            self._Connections.MouseClicked(bool)
-        end
-    end)
-end
+
 
 -- METHODS
 function class:Ratio(AspectRatio)
@@ -128,6 +125,10 @@ function class:Update(dt)
     
             self._Connections.Hover(self._IsHovering)
         end
+    end
+
+    if self._Connections["Update"] then
+        self._Connections.Update(dt)
     end
 end
 

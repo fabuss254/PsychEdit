@@ -24,7 +24,11 @@ table.find = function(tbl, obj)
     end
 end
 ScreenSize = Vector2(love.graphics.getDimensions())
-MouseClicked = Signal.new()
+GetMousePosition = function()
+    local x = love.mouse.getX()
+    local y = love.mouse.getY()
+    return Vector2(x, y)
+end
 
 function typeof(obj)
     return type(obj) == "table" and obj._type or type(obj)
@@ -45,12 +49,4 @@ end
 
 function love.resize(w, h)
     ScreenSize = Vector2(w, h)
-end
-
-function love.mousepressed()
-    MouseClicked:Fire(true)
-end
-
-function love.mousereleased()
-    MouseClicked:Fire(false)
 end
