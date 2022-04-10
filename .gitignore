@@ -1,1 +1,4 @@
 run.bat
+/exports/linux/*
+/exports/windows/*
+/exports/zip/*
