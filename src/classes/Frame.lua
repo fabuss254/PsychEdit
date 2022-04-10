@@ -1,5 +1,6 @@
 -- LIBS
 local Vector2 = require("src/classes/Vector2")
+local UDim2 = require("src/classes/UDim2")
 local Color = require("src/classes/Color")
 local Object = require("src/libs/Classic")
 
@@ -8,23 +9,25 @@ local ErrorMessage = require("src/libs/ErrorMessage")
 
 -- CLASS
 local class = Object:extend("Frame")
-class.AllowedEvents = {"Hover", "MouseClicked", "Update"}
+class.AllowedEvents = {"Hover", "MouseClick", "Update"}
 
 function class:new(x, y, w, h)
     -- UI Properties
     self.Name = "Frame" -- Only for debug purposes
-    self.Position = Vector2(x, y)
-    self.Size = Vector2(w or 100, h or 100)
+    self.Position = UDim2(0, x, 0, y)
+    self.Size = UDim2(0, w or 100, 0, h or 100)
     self.Anchor = Vector2(0, 0)
     self.Opacity = 0
 
     self.Color = Color(1, 1, 1)
     self.CornerRadius = 0
     self.ZIndex = 0
+    self.LayoutOrder = 0
 
     -- UI interactive properties
     self.Visible = true
     self._IsHovering = false
+    self.ChildLayout = false
 
     -- Basic 1 time connections
     self._Connections = {}
@@ -47,8 +50,20 @@ function class:Ratio(AspectRatio)
     rawset(self, "AspectRatio", AspectRatio)
 end
 
+function class:IsVisible()
+    if self.Parent then
+        return self.Visible and self.Parent:IsVisible()
+    end
+    return self.Visible
+end
+
+function class:SetLayout(newLayout)
+    self.ChildLayout = newLayout()
+end
+
 function class:SetParent(Obj)
     table.insert(Obj._Childs, self)
+    table.sort(Obj._Childs, function(a, b) return a.LayoutOrder < b.LayoutOrder end)
     self.Parent = Obj
 
     if not UI.IsAdded(self) then
@@ -61,15 +76,18 @@ function class:SetParent(Obj)
 end
 
 function class:GetChildren()
-    return Obj._Childs
+    return self._Childs
 end
 
 function class:GetDrawingCoordinates()
-    --local Pos = typeof(self.Position) == "Vector2" and self.Position or self.Position:ToVector2(self, "Position")
-    --local Size = typeof(self.Size) == "Vector2" and self.Size or self.Size:ToVector2(self, "Size")
 
     local OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = 0, 0, ScreenSize.X, ScreenSize.Y
     if self.Parent then
+        if self.Parent.ChildLayout then
+            -- Overwrite how to place the elements
+            return self.Parent.ChildLayout:Execute(self)
+        end
+
         OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = self.Parent:GetDrawingCoordinates()
     end
 
@@ -78,6 +96,7 @@ function class:GetDrawingCoordinates()
 
     local Size = self.Size:ToVector2(ParentSize)
     local Pos = self.Position:ToVector2(ParentSize) + ParentPos
+    
 
     if rawget(self, "AspectRatio") then
         local Min = math.min(Size.X, Size.Y) / self.AspectRatio
@@ -93,7 +112,6 @@ function class:GetDrawingCoordinates()
 end
 
 function class:Draw()
-    if not self.Visible then return end
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
 
     self.Color:Apply(1-self.Opacity)
@@ -111,8 +129,8 @@ function class:IsHovering()
     local y = love.mouse.getY()
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
 
-    local HoveringX = PosX < x and PosX + ScaleX > x
-    local HoveringY = PosY < y and PosY + ScaleY > y
+    local HoveringX = PosX <= x and PosX + ScaleX > x
+    local HoveringY = PosY <= y and PosY + ScaleY > y
 
     return HoveringX and HoveringY
 end

@@ -17,6 +17,9 @@ class.one = class(1, 1)
 class.x = class(1, 0)
 class.y = class(0, 1)
 
+class.X = class.x 
+class.Y = class.y
+
 -- METHODS
 function class:GetMagnitude()
     return math.sqrt((self.X^2) + (self.Y^2))

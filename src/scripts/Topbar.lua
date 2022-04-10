@@ -4,7 +4,11 @@ local UDim2 = require("src/classes/UDim2")
 local Color = require("src/classes/Color")
 local Frame = require("src/classes/Frame")
 local Image = require("src/classes/Image")
+local Text = require("src/classes/Text")
 
+local ListLayout = require("src/classes/layout/ListLayout")
+
+local Fonts = require("src/libs/Fonts")
 local UI = require("src/libs/UIEngine")
 
 -- Properties
@@ -12,10 +16,69 @@ local TopbarColor = Color.FromRGB(54, 63, 77)
 local ButtonColor = Color.FromRGB(79, 93, 112)
 
 local Buttons = {
-    "File",
-    "Edit",
-    "Help"
+    {"File", {
+        {"Open"},
+        {"Save"},
+        {"Save As..."}
+    }},
+    {"Edit"},
+    {"Help"},
 }
+
+-- Functions
+local function MakeSubmenu(List, Parent)
+    if not List then return end
+    local Menu = Frame()
+    Menu.Color = TopbarColor
+    Menu.Position = UDim2(0, 0, 1, 0)
+    Menu.ZIndex = 100
+    Menu:SetLayout(ListLayout)
+    Menu.ChildLayout.Direction = 0
+
+    Menu.Visible = false
+
+    local FullSize = Vector2()
+    for i,v in pairs(List) do
+        if v[1] then
+            local ButtonFrame = Frame()
+            ButtonFrame.Color = ButtonColor
+            ButtonFrame.Opacity = 1
+            ButtonFrame.LayoutOrder = i
+            ButtonFrame.ZIndex = 100+i
+
+            ButtonFrame:Connect("Hover", function(IsHovering)
+                ButtonFrame.Opacity = IsHovering and 0 or 1
+            end)
+
+            local Text = Text(Fonts.ConsolaSmall)
+            Text.Name = v[1]
+            Text.Anchor = Vector2.y/2
+            Text.Position = UDim2(0, 10, 0.5, 0)
+            Text.ZIndex = 1000
+            Text.Color = Text.Color:Lerp(ButtonColor, 0.2)
+            Text:SetText(v[1])
+            Text:SetParent(ButtonFrame)
+
+            ButtonFrame.Size = UDim2(1, 0, 0, Text.Size.Y.Offset + 12)
+
+            ButtonFrame:SetParent(Menu)
+
+            FullSize.X = math.max(FullSize.X, Text.Size.X.Offset + 20)
+            FullSize.Y = FullSize.Y + Text.Size.Y.Offset + 12
+        end
+    end
+    Menu.Size = UDim2(0, FullSize.X, 0, FullSize.Y)
+
+    Menu:SetParent(Parent)
+
+    Menu:Connect("Update", function()
+        if not (Parent:IsHovering() or Menu:IsHovering()) then
+            Menu.Visible = false
+        end
+    end)
+
+    return Menu
+end
 
 -- Script
 local Topbar = Frame()
@@ -24,69 +87,41 @@ Topbar.Name = "Topbar"
 Topbar.Position = UDim2(0, 0, 0, 0)
 Topbar.Color = TopbarColor
 Topbar.Size = UDim2(1, 0, 0, 30)
-
-Topbar:Connect("MouseClicked", function(bool)
-    Topbar.META.IsMoving = bool
-    if bool then
-        local MousePos = GetMousePosition()
-        local WindowPos = Vector2(love.window.getPosition())
-        Topbar.META.MoveOffset = WindowPos-MousePos
-    end
-end)
-
-Topbar:Connect("Update", function(dt)
-    if not Topbar.META.IsMoving then return end
-    if not love.mouse.isDown() then
-        Topbar.META.IsMoving = false
-        return
-    end
-
-    local NewPos = GetMousePosition() + Topbar.META.MoveOffset
-    love.window.setPosition(NewPos.X, NewPos.Y)
-end)
+Topbar:SetLayout(ListLayout)
 
 UI.Add(Topbar)
 
---[[
-local Icons = {
-    {Name = "close", Size = 0.6, OnClick = function()
-        love.event.quit()
-    end}, 
-    {Name = "window", Size = 0.5, OnClick = function()
-        love.window.maximize()
-    end},
-    {Name = "minimize", Size = 0.5, OnClick = function()
-        love.window.minimize()
-    end},
-}
-
-for i,v in pairs(Icons) do
+local Offset = 0
+for i,v in pairs(Buttons) do
     local ButtonFrame = Frame()
-    ButtonFrame.Name = v.Name .. "Button"
-    ButtonFrame.Position = UDim2(1, (i-1) * -45, 0, 0)
-    ButtonFrame.Size = UDim2(0, 45, 1, 0)
-    ButtonFrame.Anchor = Vector2.x
-    ButtonFrame.Color = v.Name == "close" and Color.Red:Lerp(ButtonColor, 0.25) or ButtonColor
+    ButtonFrame.Name = v[1] .. "Button"
+    ButtonFrame.Color = ButtonColor
     ButtonFrame.Opacity = 1
-    ButtonFrame:SetParent(Topbar)
+    ButtonFrame.LayoutOrder = i
 
     ButtonFrame:Connect("Hover", function(IsHovering)
         ButtonFrame.Opacity = IsHovering and 0 or 1
     end)
 
-    ButtonFrame:Connect("MouseClicked", function(bool)
-        if not bool then return end
-        v.OnClick()
-    end)
+    local Text = Text(Fonts.ConsolaSmall)
+    Text.Name = v[1]
+    Text.Position = UDim2(.5, 0, .55, 0)
+    Text.Anchor = Vector2.one/2
+    Text.ZIndex = 10
+    Text.Color = Text.Color:Lerp(ButtonColor, 0.2)
+    Text:SetText(v[1])
+    Text:SetParent(ButtonFrame)
 
-    local ButtonIcon = Image("/assets/images/icons/" .. v.Name .. "_icon.png", "linear")
-    ButtonIcon.Name = v.Name .. "Icon"
-    ButtonIcon.Position = UDim2(.5, 0, .5, 0)
-    ButtonIcon.Size = UDim2(1, 0, v.Size, 0)
-    ButtonIcon.Color = Color.FromRGB(200, 200, 200)
-    ButtonIcon.Anchor = Vector2.one/2
-    ButtonIcon:Ratio(1)
-    ButtonIcon:SetParent(ButtonFrame)
+    ButtonFrame.Size = UDim2(0, Text.Size.X.Offset + 16, 1, 0)
+
+    ButtonFrame:SetParent(Topbar)
+
+    local Submenu = MakeSubmenu(v[2], ButtonFrame)
+    if Submenu then
+        ButtonFrame:Connect("MouseClick", function(bool)
+            if not bool then return end
+    
+            Submenu.Visible = not Submenu.Visible
+        end)
+    end
 end
-
-]]

@@ -3,7 +3,7 @@ local Vector2 = require("src/classes/Vector2")
 local Frame = require("src/classes/Frame")
 
 -- CLASS
-local class = Frame:extend()
+local class = Frame:extend("Image")
 
 function class:new(ImagePath, ImageMode)
     self.super.new(self)

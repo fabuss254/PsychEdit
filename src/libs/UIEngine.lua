@@ -49,7 +49,7 @@ end
 
 function Module.Update(dt)
     for _,v in pairs(Module.Pool) do
-        if rawget(v.Obj.class, "Update") then
+        if v.Obj:IsVisible() and rawget(v.Obj.class, "Update") then
             v.Obj:Update(dt)
         end
     end
@@ -57,7 +57,9 @@ end
 
 function Module.Draw()
     for _,v in pairs(Module.Pool) do
-        v.Obj:Draw()
+        if v.Obj:IsVisible() then
+            v.Obj:Draw()
+        end
     end
 end
 
@@ -65,8 +67,8 @@ function Module.MouseClickEvent(bool)
     for i=#Module.Pool, 1, -1 do
         local v = Module.Pool[i].Obj
 
-        if v._Connections["MouseClicked"] and v:IsHovering() then
-            return v._Connections["MouseClicked"](bool)
+        if v._Connections["MouseClick"] and v:IsHovering() then
+            return v._Connections["MouseClick"](bool)
         end
     end
 end
