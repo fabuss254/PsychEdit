@@ -11,6 +11,12 @@ function class:new(X, Y)
     return self
 end
 
+class.MiddlePoint = class(.5, .5)
+class.zero = class(0, 0)
+class.one = class(1, 1)
+class.x = class(1, 0)
+class.y = class(0, 1)
+
 -- METHODS
 function class:GetMagnitude()
     return math.sqrt((self.X^2) + (self.Y^2))
