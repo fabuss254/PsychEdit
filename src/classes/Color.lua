@@ -1,5 +1,4 @@
 -- LIBS
-local Instance = require("src/libs/Instance")
 local Object = require("src/libs/Classic") 
 
 -- CLASS

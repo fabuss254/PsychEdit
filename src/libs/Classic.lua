@@ -55,13 +55,14 @@ end
 
 
 function Object:__tostring()
-  return "Object"
+  return rawget(self, "super") and rawget(rawget(self, "super"), "_type") or "Object"
 end
 
 
 function Object:__call(...)
   local obj = setmetatable({}, self)
   obj:new(...)
+  obj._initialised = true
   return obj
 end
 
