@@ -96,11 +96,10 @@ function class:GetDrawingCoordinates()
 
     local Size = self.Size:ToVector2(ParentSize)
     local Pos = self.Position:ToVector2(ParentSize) + ParentPos
-    
 
     if rawget(self, "AspectRatio") then
-        local Min = math.min(Size.X, Size.Y) / self.AspectRatio
-        Size = Vector2(Min, Min)
+        local Min = math.min(Size.X, Size.Y)
+        Size = Vector2(Min / self.AspectRatio, Min)
     end
 
     local PosX = Pos.X - Size.X*self.Anchor.X

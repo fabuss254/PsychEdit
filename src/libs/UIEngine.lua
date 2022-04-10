@@ -9,6 +9,8 @@ local Color = require("src/classes/Color")
 local Module = {}
 local GlobalID = 1
 Module.Pool = {}
+Module.UIs = {}
+local ZIndexMenu = 0
 
 -- PRIVATE FUNCTIONS
 local function SortPool()
@@ -41,6 +43,20 @@ function Module.Rem(Obj)
             return
         end
     end
+end
+
+function Module.RegisterUI(UIName, UI)
+    Module.UIs[UIName] = UI
+    local function ManageZIndex(Childs)
+        for _,v in pairs(Childs) do
+            v.ZIndex = v.ZIndex + ZIndexMenu*1000
+            ManageZIndex(v:GetChildren())
+        end
+    end
+
+    ManageZIndex({UI})
+    ZIndexMenu = ZIndexMenu + 1
+    UI.Visible = false
 end
 
 function Module.IsAdded(Obj)
@@ -83,7 +99,7 @@ function love.mousereleased()
 end
 
 -- EXPORT
-Color.FromRGB(54, 63, 77):Lerp(Color.Black, 0.5):ApplyBackground()
+Color.FromRGB(54, 63, 77):Lerp(Color.Black, 0.2):ApplyBackground()--:Lerp(Color.Black, 0.5):ApplyBackground()
 return setmetatable(Module, {
     __newindex = function(self, index, value)
         return error(ErrorMessage.NewIndexLocked:format(index))

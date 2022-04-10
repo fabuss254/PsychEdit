@@ -13,29 +13,16 @@ local Signal = require("src/classes/Signal")
 local UI = require("src/libs/UIEngine")
 
 -- Global overwrites
-love.graphics.setDefaultFilter('nearest', 'nearest')
-tick = love.timer.getTime
-math.clamp = function(value, min, max) return math.min(math.max(value, min), max) end
-table.find = function(tbl, obj)
-    for _,v in pairs(tbl) do
-        if v == obj then
-            return v
-        end
-    end
-end
-ScreenSize = Vector2(love.graphics.getDimensions())
-GetMousePosition = function()
-    local x = love.mouse.getX()
-    local y = love.mouse.getY()
-    return Vector2(x, y)
-end
-
-function typeof(obj)
-    return type(obj) == "table" and obj._type or type(obj)
-end
+require("src/libs/Overwrite")
 
 -- Global functions
 function love.load()
+    for i,v in pairs(love.filesystem.getDirectoryItems("src/scripts")) do
+        local FileName = string.sub(v, 1, #v-4)
+        if FileName ~= "Topbar" then
+            require("src/scripts/" .. FileName)
+        end
+    end
     require("src/scripts/Topbar")
 end
 
