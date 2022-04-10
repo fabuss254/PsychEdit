@@ -42,7 +42,7 @@ local Buttons = {
             love.system.openURL("file://D:/Developpement/FNF-Pysch-editor/README.md")
         end},
         {"Open Github", function()
-            love.system.openURL("https://github.com/fabuss254/PsychEngine-Modchart-Editor")
+            love.system.openURL("https://github.com/fabuss254/PsychEdit")
         end},
         false,
         {"Made by Fabuss254"}
