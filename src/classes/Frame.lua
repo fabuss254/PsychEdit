@@ -42,10 +42,14 @@ function class:new(x, y, w, h)
     return self
 end
 
--- EVENTS
-
-
 -- METHODS
+function class:DoReturnSelf(...)
+    if self.META.ReturnSelf then
+        return self, ...
+    end
+    return ...
+end
+
 function class:Ratio(AspectRatio)
     rawset(self, "AspectRatio", AspectRatio)
 end
@@ -140,20 +144,21 @@ function class:Update(dt)
         if self._IsHovering ~= Hovering then
             self._IsHovering = Hovering
     
-            self._Connections.Hover(self._IsHovering)
+            self._Connections.Hover(self:DoReturnSelf(self._IsHovering))
         end
     end
 
     if self._Connections["Update"] then
-        self._Connections.Update(dt)
+        self._Connections.Update(self:DoReturnSelf(dt))
     end
 end
 
-function class:Connect(event, callback)
+function class:Connect(event, callback, returnSelf)
     if not table.find(class.AllowedEvents, event) then return error(("Attempt to connect instance '%s' to undefined event '%s'"):format(typeof(class), event)) end
     if self._Connections[event] then return error("Cannot connect to the same event twice") end
 
     if self.class[event] then self[event](self) end
+    self.META.ReturnSelf = returnSelf
     self._Connections[event] = callback
 end
 

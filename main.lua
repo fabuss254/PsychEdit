@@ -24,14 +24,16 @@ function love.load()
         end
     end
     require("src/scripts/Topbar")
+
+    UI.ReloadZIndexes()
 end
 
 function love.update(dt)
-    UI:Update(dt)
+    UI.Update(dt)
 end
 
 function love.draw()
-    UI:Draw(dt)
+    UI.Draw()
 end
 
 function love.resize(w, h)

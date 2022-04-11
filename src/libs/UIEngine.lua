@@ -59,6 +59,16 @@ function Module.RegisterUI(UIName, UI)
     UI.Visible = false
 end
 
+function Module.ReloadZIndexes()
+    for _,v in pairs(Module.Pool) do
+        if v.Obj.ZIndex ~= v.ZIndex then
+            v.ZIndex = v.Obj.ZIndex
+        end
+    end
+
+    return SortPool()
+end
+
 function Module.IsAdded(Obj)
     return rawget(Obj, "UIID")
 end
@@ -83,8 +93,8 @@ function Module.MouseClickEvent(bool)
     for i=#Module.Pool, 1, -1 do
         local v = Module.Pool[i].Obj
 
-        if v._Connections["MouseClick"] and v:IsHovering() then
-            return v._Connections["MouseClick"](bool)
+        if v._Connections["MouseClick"] and v:IsVisible() and v:IsHovering() then
+            return v._Connections["MouseClick"](v:DoReturnSelf(bool))
         end
     end
 end

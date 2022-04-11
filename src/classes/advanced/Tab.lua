@@ -15,13 +15,14 @@ local UI = require("src/libs/UIEngine")
 -- Class
 local class = Object:extend("Tab")
 
-function class:new()
+function class:new(Props)
+    Props = Props or {}
+
     local Menu = Frame()
-    Menu.Position = UDim2(.5, 0, .5, 0)
-    Menu.Anchor = Vector2.one/2
-    Menu.Size = UDim2(.5, 0, .5, 0)
+    Menu.Size = UDim2(0, Props.Size and Props.Size.X or 300, 0, Props.Size and Props.Size.Y or 300)
+    Menu.Position = UDim2(0, Props.Position and Props.Position.X or (ScreenSize.X/2 - Menu.Size.X.Offset/2), 0, Props.Position and Props.Position.Y or (ScreenSize.Y/2 - Menu.Size.Y.Offset/2))
     Menu.Color = Color.FromRGB(104, 123, 153)
-    Menu:Ratio(0.5)
+    --Menu:Ratio(0.5)
 
     local Shadow = Frame()
     Shadow.ZIndex = -1
@@ -59,14 +60,13 @@ function class:new()
         end
 
         local newPos = GetMousePosition() + Topbar.META.Offset
-
         Menu.Position = UDim2(newPos.X/ScreenSize.X, 0, newPos.Y/ScreenSize.Y, 0)
     end)
 
     local Title = Text(Fonts.ConsolaSmall)
     Title.Anchor = Vector2.one/2
     Title.Position = UDim2(.5, 0, .6, 0)
-    Title:SetText("File Explorer")
+    Title:SetText(Props.Title or "Menu missing property 'Props.Title'")
     Title:SetParent(Topbar)
 
     local Icons = {
@@ -101,8 +101,38 @@ function class:new()
         ButtonFrame:SetParent(Topbar)
     end
 
-    Topbar:SetParent(Menu)
+    -- Bottom right corner extensive
+    local ResizeFrame = Frame()
+    ResizeFrame.Position = UDim2(1, -4, 1, -4)
+    ResizeFrame.ZIndex = 10
+    ResizeFrame.Size = UDim2(0, 6, 0, 6)
+    ResizeFrame.Anchor = Vector2.one
+    ResizeFrame.Color = Menu.Color
+    ResizeFrame:SetParent(Content)
 
+    ResizeFrame.META.Holding = false
+    ResizeFrame:Connect("Hover", function(bool)
+        ResizeFrame.Color = bool and Menu.Color:Lerp(Color.White, 0.5) or Menu.Color
+    end)
+
+    ResizeFrame:Connect("MouseClick", function(bool)
+        if not bool then return end
+
+        ResizeFrame.META.Holding = true
+    end)
+
+    ResizeFrame:Connect("Update", function(dt)
+        if not ResizeFrame.META.Holding then return end
+        if not love.mouse.isDown(1) then
+            ResizeFrame.META.Holding = false
+            return
+        end
+
+        local NewSize = GetMousePosition() - Menu.Position:ToVector2(ScreenSize) + Vector2(8, 8)
+        Menu.Size = UDim2(0, math.max(NewSize.X, Props.MinSize and Props.MinSize.X or Title.Size.X.Offset + 50), 0, math.max(NewSize.Y, Props.MinSize and Props.MinSize.Y or 100))
+    end)
+
+    Topbar:SetParent(Menu)
 
     self.Menu = Menu
     self.Topbar = Topbar
