@@ -75,7 +75,7 @@ end
 
 function Module.Update(dt)
     for _,v in pairs(Module.Pool) do
-        if v.Obj:IsVisible() and rawget(v.Obj.class, "Update") then
+        if v.Obj:IsVisible() and v.Obj.class["Update"] then
             v.Obj:Update(dt)
         end
     end

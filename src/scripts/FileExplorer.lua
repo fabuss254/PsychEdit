@@ -17,6 +17,59 @@ local New = UIBuilder.New
 local Children = UIBuilder.Children
 local Connect = UIBuilder.Connect
 local List = UIBuilder.List
+local Exec = UIBuilder.Exec
+
+-- Functions
+function(Key, Value)
+    return New "Frame" {
+        Opacity = 1,
+        LayoutOrder = Key,
+        Size = UDim2(1, 0, 0, 20),
+
+        [Exec] = function(self)
+            self.META.Expand = false
+        end,
+
+        [Connect "Hover"] = function(self, bool) 
+            self.Opacity = bool and 0.8 or 1
+        end,
+
+        [Connect "MouseClick"] = function(self, bool)
+            if not bool then return end
+            self.META.Expand = not self.META.Expand
+
+            self:Get("Frame"):Get("Image").Rotation = self.META.Expand and 0 or -math.pi/2
+        end,
+
+        [Children] = {
+            New "Frame" {
+                Anchor = Vector2.y/2,
+                Position = UDim2(0, 0, .5, 0),
+                Size = UDim2(0, 20, 0, 20),
+                Opacity = 1,
+
+                [Children] = New "Image" {
+                    Anchor = Vector2.one/2,
+                    Position = UDim2(.5, 0, .5, 0),
+                    Size = UDim2(.8, 0, .8, 0),
+                    ZIndex = 100,
+
+                    Rotation = -math.pi/2,
+
+                    Image = "assets/images/icons/expand_icon.png"
+                }
+            },
+            New "Text" {
+                Anchor = Vector2.y/2,
+                Position = UDim2(0, 20, .55, 0),
+
+                Color = Color.White:Lerp(TabMenu.Content.Color, 0.2),
+                Text = Value,
+                ZIndex = 100
+            }
+        }
+    }
+end
 
 -- Basic windows
 local TabMenu = Tab({
@@ -31,8 +84,30 @@ local DahContent = {
         Color = TabMenu.Content.Color:Lerp(Color.Black, .25),
         Size = UDim2(0.3, 0, 1, 0),
         ZIndex = 20,
+        ChildLayout = ListLayout(0),
         [Children] = {
             
+            List({"Test1", "Test2", "Test3"}, )
+            
+            --[[
+            New "Frame" {
+                Opacity = 0,
+                LayoutOrder = Key,
+                Size = UDim2(1, 0, 0, 16),
+                [Exec] = function(self)
+                    print("HEllo", #self:GetChildren())
+                end,
+
+                [Children] = New "Frame" {
+                    Size = UDim2(1, 0, 5, 0),
+                    Color = Color.Red,
+                    Position = UDim2(.5, 0, .5, 0),
+                    ZIndex = 100,
+                    --Text = Value,
+                    --LayoutOrder = Key,
+                }
+            }
+            ]]
         }
     }
 }

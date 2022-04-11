@@ -2,16 +2,16 @@
 local UDim2 = require("src/classes/UDim2")
 local Color = require("src/classes/Color")
 local Frame = require("src/classes/Frame")
+local Fonts = require("src/libs/Fonts")
 
 -- CLASS
 local class = Frame:extend("Text")
 
 function class:new(Font, x, y)
     self.super.new(self, x, y, 0, 0, 0)
-    self._type = "TextLabel"
     self.Scale = 1
 
-    self._TEXT = love.graphics.newText(Font, "TextLabel")
+    self._TEXT = love.graphics.newText(Font or Fonts.ConsolaSmall, "TextLabel")
     self:SetText("TextLabel")
 
     return self
@@ -32,6 +32,10 @@ function class:Draw()
     love.graphics.translate(PosX, PosY)
     love.graphics.draw(self._TEXT, 0, 0, 0, self.Scale, self.Scale)
     love.graphics.origin()
+end
+
+function class:__tostring()
+    return "TEXT" -- ("Text_%s"):format(self.Name)
 end
 
 return class

@@ -8,9 +8,9 @@ local ErrorMessage = require("src/libs/ErrorMessage")
 -- CLASS
 local class = Object:extend("ListLayout")
 
-function class:new()
-    self.Direction = 1 -- 1: Horizontal, 2: Vertical
-    self.Offset = 0
+function class:new(Direction, Offset)
+    self.Direction = Direction or 1 -- 1: Horizontal, 2: Vertical
+    self.Offset = Offset or 0
 
     return self
 end

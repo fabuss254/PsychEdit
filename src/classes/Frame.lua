@@ -13,7 +13,7 @@ class.AllowedEvents = {"Hover", "MouseClick", "Update"}
 
 function class:new(x, y, w, h)
     -- UI Properties
-    self.Name = "Frame" -- Only for debug purposes
+    self.Name = self._type -- Only for debug purposes
     self.Position = UDim2(0, x, 0, y)
     self.Size = UDim2(0, w or 100, 0, h or 100)
     self.Anchor = Vector2(0, 0)
@@ -50,8 +50,20 @@ function class:DoReturnSelf(...)
     return ...
 end
 
+function class:Get(Name)
+    for _,v in pairs(self:GetChildren()) do
+        if v.Name == Name then
+            return v
+        end
+    end
+end
+
 function class:Ratio(AspectRatio)
     rawset(self, "AspectRatio", AspectRatio)
+end
+
+function class:SetRatio(...)
+    return self:Ratio(...)
 end
 
 function class:IsVisible()

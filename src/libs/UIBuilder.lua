@@ -22,6 +22,7 @@ Module.Instances = scanForFile("src/classes")
 
 -- Tags
 Module.Children = {}
+Module.Exec = {}
 Module.Connect = function(Connection) return ("CONNECTINSTANCE " .. Connection) end
 
 function Module.New(InstanceName)
@@ -31,11 +32,14 @@ function Module.New(InstanceName)
     return function(Props)
         local Childs = {}
         local Connections = {}
+        local Exec
         for i,v in pairs(Props) do
             if i == Module.Children then
                 Childs = v
             elseif type(i) == "string" and string.sub(i, 1, 15) == "CONNECTINSTANCE" then
                 Connections[string.sub(i, 17, #i)] = v
+            elseif i == Module.Exec then
+                Exec = v
             elseif obj.class["Set" .. i] then
                 obj["Set" .. i](obj, v)
             else
@@ -46,21 +50,30 @@ function Module.New(InstanceName)
         local function RetrieveChilds(tbl, Out)
             local Out = Out or {}
             for _,v in pairs(tbl) do
-                if type(v) == "table" and not v._type then
-                    Out = RetrieveChilds(v, Out)
-                else
-                    table.insert(Out, v)
+                if type(v) == "table" then
+                    if not v._type then
+                        Out = RetrieveChilds(v, Out)
+                    else
+                        table.insert(Out, v)
+                    end
                 end
             end
             return Out
         end
 
-        for _,v in pairs(RetrieveChilds((type(Childs) ~= "table" and {Childs}) or Childs or {})) do
-            v:SetParent(obj)
+        local Childs = (Childs.LayoutOrder and {Childs}) or RetrieveChilds((Childs or {}))
+        for _,v in pairs(Childs) do
+            if v.LayoutOrder then
+                v:SetParent(obj)
+            end
         end
 
         for i,v in pairs(Connections) do
             obj:Connect(i, v, true)
+        end
+
+        if Exec then
+            Exec(obj)
         end
 
         return obj

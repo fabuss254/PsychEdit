@@ -19,7 +19,7 @@ end
 
 -- METATABLES
 function class:__tostring()
-    return string.format("Vector2(%i, %i)", self.X, self.Y)
+    return string.format("UDim2(%i, %i, %i, %i)", self.X.Scale, self.X.Offset, self.Y.Scale, self.Y.Offset)
 end
 
 function class.__eq(a, b)
