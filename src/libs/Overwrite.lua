@@ -10,6 +10,16 @@ table.find = function(tbl, obj)
         end
     end
 end
+function string.split(inputstr, sep)
+    if sep == nil then
+            sep = "%s"
+    end
+    local t={}
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+            table.insert(t, str)
+    end
+    return t
+end
 ScreenSize = Vector2(love.graphics.getDimensions())
 GetMousePosition = function()
     local x = love.mouse.getX()

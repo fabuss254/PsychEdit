@@ -19,8 +19,21 @@ local Connect = UIBuilder.Connect
 local List = UIBuilder.List
 local Exec = UIBuilder.Exec
 
+-- Config
+local o = love.filesystem.getDirectoryItems("/")
+for i,v in pairs(o) do
+    print(i, v)
+end
+
+-- Basic windows
+local TabMenu = Tab({
+    Title = "File Explorer",
+    Size = Vector2(600, 400),
+    Position = Vector2(ScreenSize.X/2 - 300, ScreenSize.Y/2 - 200),
+})
+
 -- Functions
-function(Key, Value)
+local function ListItem(Key, Value)
     return New "Frame" {
         Opacity = 1,
         LayoutOrder = Key,
@@ -71,13 +84,6 @@ function(Key, Value)
     }
 end
 
--- Basic windows
-local TabMenu = Tab({
-    Title = "File Explorer",
-    Size = Vector2(600, 400),
-    Position = Vector2(ScreenSize.X/2 - 300, ScreenSize.Y/2 - 200),
-})
-
 local DahContent = {
     -- Left
     New "Frame" {
@@ -86,28 +92,7 @@ local DahContent = {
         ZIndex = 20,
         ChildLayout = ListLayout(0),
         [Children] = {
-            
-            List({"Test1", "Test2", "Test3"}, )
-            
-            --[[
-            New "Frame" {
-                Opacity = 0,
-                LayoutOrder = Key,
-                Size = UDim2(1, 0, 0, 16),
-                [Exec] = function(self)
-                    print("HEllo", #self:GetChildren())
-                end,
-
-                [Children] = New "Frame" {
-                    Size = UDim2(1, 0, 5, 0),
-                    Color = Color.Red,
-                    Position = UDim2(.5, 0, .5, 0),
-                    ZIndex = 100,
-                    --Text = Value,
-                    --LayoutOrder = Key,
-                }
-            }
-            ]]
+            List({"Test1", "Test2", "Test3"}, ListItem)
         }
     }
 }
