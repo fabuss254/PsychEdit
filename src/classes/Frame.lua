@@ -26,6 +26,7 @@ function class:new(x, y, w, h)
     self.LayoutOrder = 0
 
     self.ClipDescendants = false
+    self.Active = false
 
     -- UI interactive properties
     self.Visible = true
@@ -215,6 +216,7 @@ function class:Connect(event, callback, returnSelf)
     if self.class[event] then self[event](self) end
     self.META.ReturnSelf = returnSelf
     self._Connections[event] = callback
+    self.Active = true
 end
 
 function class:Destroy()

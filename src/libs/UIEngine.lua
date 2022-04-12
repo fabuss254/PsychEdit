@@ -76,7 +76,7 @@ function Module.GetDrawingMap(UI, UnsortedMap, NoFirst)
     for _,v in pairs(UI) do
         if v.Visible then
             UnsortedMap.Draw[#UnsortedMap.Draw+1] = v
-            if v.class["Update"] then
+            if v.class["Update"] and v.Active then
                 UnsortedMap.Update[v.Id] = true
             end
 
