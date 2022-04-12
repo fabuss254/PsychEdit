@@ -41,6 +41,7 @@ function class:new(x, y, w, h)
     self.Parent = false
 
     -- Others
+    self.CachedData = false
     self.META = {}
 
     -- Identify this frame
@@ -73,6 +74,22 @@ function class:GetDescendants(tbl)
         o = v:GetDescendants(o)
     end
     return o
+end
+
+function class:SetPosition(newPos)
+    self.Position = newPos
+    self.CachedData = false
+    for _,v in pairs(self:GetDescendants()) do
+        v.CachedData = false
+    end
+end
+
+function class:SetSize(newSize)
+    self.Size = newSize
+    self.CachedData = false
+    for _,v in pairs(self:GetDescendants()) do
+        v.CachedData = false
+    end
 end
 
 function class:SetVisible(bool)
@@ -139,12 +156,18 @@ function class:GetChildren()
 end
 
 function class:GetDrawingCoordinates()
+    if self.CachedData then
+        return self.CachedData[1], self.CachedData[2], self.CachedData[3], self.CachedData[4]
+    end
+
 
     local OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = 0, 0, ScreenSize.X, ScreenSize.Y
     if self.Parent then
         if self.Parent.ChildLayout then
             -- Overwrite how to place the elements
-            return self.Parent.ChildLayout:Execute(self)
+            local a,b,c,d = self.Parent.ChildLayout:Execute(self)
+            self.CachedData = {a,b,c,d}
+            return a,b,c,d
         end
 
         OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = self.Parent:GetDrawingCoordinates()
@@ -166,11 +189,11 @@ function class:GetDrawingCoordinates()
     local ScaleX = Size.X
     local ScaleY = Size.Y
 
-    return math.floor(PosX), math.floor(PosY), math.floor(ScaleX), math.floor(ScaleY)
+    self.CachedData = {math.floor(PosX), math.floor(PosY), math.floor(ScaleX), math.floor(ScaleY)}
+    return self.CachedData[1], self.CachedData[2], self.CachedData[3], self.CachedData[4]
 end
 
 function class:Draw()
-    if self.Opacity >= 1 then return end -- No need to draw if invisible
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
 
     self.Color:Apply(1-self.Opacity)

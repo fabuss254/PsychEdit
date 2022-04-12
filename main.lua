@@ -8,6 +8,7 @@
 -- Basic classes import
 local Vector2 = require("src/classes/Vector2")
 local Signal = require("src/classes/Signal")
+local Color = require("src/classes/Color")
 
 -- Basic lib import
 local UI = require("src/libs/UIEngine")
@@ -38,9 +39,16 @@ end
 function love.draw()
     UI.Draw()
 
-    love.graphics.print("FPS:" .. love.timer.getFPS())
+    Color.Green:Apply()
+    love.graphics.printf("FPS:" .. love.timer.getFPS(), ScreenSize.X-110, 5, 100, "right")
 end
 
 function love.resize(w, h)
     ScreenSize = Vector2(w, h)
+    for _,v in pairs(UI.UIs) do
+        v.CachedData = false
+        for _,g in pairs(v:GetDescendants()) do
+            g.CachedData = false
+        end
+    end
 end

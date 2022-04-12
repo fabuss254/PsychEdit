@@ -111,12 +111,16 @@ end
 local DahContent = {
     -- Center
     New "Frame" {
-        Color = TabMenu.Content.Color:Lerp(Color.Black, .25),
         Size = UDim2(1, 0, 1, -60),
         Anchor = Vector2(.5, .5),
         Position = UDim2(.5, 0, .5, 0),
-        ZIndex = 20,
+
+        Color = TabMenu.Content.Color:Lerp(Color.Black, .25),
         ChildLayout = ListLayout(0),
+        ZIndex = 20,
+
+        ClipDescendants = true,
+
         [Children] = {
             List(fs.getDriveList(), ListItem) -- love.filesystem.getDirectoryItems("/")
         }

@@ -82,7 +82,7 @@ local function SubmenuItem(Key, Value)
         ZIndex = BaseZIndex+Key,
 
         [Exec] = function(self)
-            self.Size = UDim2(1, 0, 0, self:Get("Text").Size.Y.Offset + 10)
+            self:SetSize(UDim2(1, 0, 0, self:Get("Text").Size.Y.Offset + 10))
         end,
 
         [Connect "Hover"] = function(self, bool)
@@ -131,8 +131,7 @@ local function Submenu(Tbl)
                 end
             end
 
-            self.Size = UDim2(0, ContentSize.X, 0, ContentSize.Y)
-            print(self.Size)
+            self:SetSize(UDim2(0, ContentSize.X, 0, ContentSize.Y))
         end,
 
         [Connect "Update"] = function(self) -- Only execute when visible
@@ -162,7 +161,7 @@ local function TopbarItem(Key, Value)
         end,
 
         [Exec] = function(self)
-            self.Size = UDim2(0, self:Get("Text").Size.X.Offset + 10, 1, 0)
+            self:SetSize(UDim2(0, self:Get("Text").Size.X.Offset + 10, 1, 0))
         end,
 
         [Children] = {

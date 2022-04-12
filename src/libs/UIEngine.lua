@@ -114,7 +114,9 @@ end
 
 function Module.Draw()
     for _,v in ipairs(Module.DrawMap) do
-        v:Draw()
+        if v.Opacity < 1 then
+            v:Draw()
+        end
     end
 end
 
