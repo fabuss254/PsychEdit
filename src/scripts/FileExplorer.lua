@@ -27,7 +27,7 @@ local SelectedColor = Color.FromRGB(8, 143, 255)
 -- Basic windows
 local Module = {}
 local TabMenu = Tab({
-    Title = "File Explorer",
+    Title = "File Explorer - Open project",
     Size = Vector2(600, 400),
     Position = Vector2(ScreenSize.X/2 - 300, ScreenSize.Y/2 - 200),
 })

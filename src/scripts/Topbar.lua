@@ -32,7 +32,7 @@ end
 
 local Buttons = {
     {"File", {
-        {"Open"},
+        {"Open", EnableUI("File Explorer")},
         false,
         {"Save"},
         {"Save As..."}
@@ -42,7 +42,6 @@ local Buttons = {
         {"Timeline", EnableUI("Timeline")},
         {"Explorer", EnableUI("Explorer")},
         {"Properties", EnableUI("Properties")},
-        {"File Explorer", EnableUI("File Explorer")},
         {"Viewport", EnableUI("Viewport")},
     }},
     {"Help", {
