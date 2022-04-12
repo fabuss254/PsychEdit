@@ -24,6 +24,8 @@ function class:new(x, y, w, h)
     self.ZIndex = 0
     self.LayoutOrder = 0
 
+    self.ClipDescendants = false
+
     -- UI interactive properties
     self.Visible = true
     self._IsHovering = false
@@ -172,6 +174,26 @@ function class:Connect(event, callback, returnSelf)
     if self.class[event] then self[event](self) end
     self.META.ReturnSelf = returnSelf
     self._Connections[event] = callback
+end
+
+function class:Destroy()
+    if self.Parent then
+        for i,v in pairs(self.Parent:GetChildren()) do
+            if v.UIID == self.UIID then
+                table.remove(self.Parent._Childs, i)
+                break
+            end
+        end
+    end
+
+    self.Parent = nil
+    UI.Rem(self)
+end
+
+function class:ClearAllChildren()
+    while #self._Childs > 0 do
+        self._Childs[1]:Destroy()
+    end
 end
 
 -- META METHODS

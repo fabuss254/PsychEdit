@@ -82,6 +82,20 @@ function Module.Update(dt)
 end
 
 function Module.Draw()
+    --[[
+    local function DrawChild(Childs)
+        for _,v in pairs(Childs) do
+            if v.Visible then
+                v:Draw()
+                DrawChild(v:GetChildren())
+            end
+        end
+    end
+
+    for _,v in pairs(Module.Pool) do
+        DrawChild({v.Obj})
+    end
+    ]]
     for _,v in pairs(Module.Pool) do
         if v.Obj:IsVisible() then
             v.Obj:Draw()

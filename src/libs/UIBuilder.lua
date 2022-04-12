@@ -83,7 +83,10 @@ end
 function Module.List(tbl, proc)
     local out = {}
     for i,v in pairs(tbl) do
-        table.insert(out, proc(i, v))
+        local ui = proc(i, v)
+        if ui then
+            table.insert(out, ui)
+        end
     end
     return out
 end
