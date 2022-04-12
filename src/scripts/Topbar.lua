@@ -8,7 +8,6 @@ local Text = require("src/classes/Text")
 
 local ListLayout = require("src/classes/layout/ListLayout")
 
-local UIBuilder = require("src/libs/UIBuilder")
 local Fonts = require("src/libs/Fonts")
 local UI = require("src/libs/UIEngine")
 

@@ -17,6 +17,9 @@ require("src/libs/Overwrite")
 
 -- Global functions
 function love.load()
+    UIBuilder = require("src/libs/UIBuilder")
+    print("MAIN", UIBuilder)
+
     for i,v in pairs(love.filesystem.getDirectoryItems("src/scripts")) do
         local FileName = string.sub(v, 1, #v-4)
         if FileName ~= "Topbar" then
@@ -34,6 +37,8 @@ end
 
 function love.draw()
     UI.Draw()
+
+    love.graphics.print("FPS:" .. love.timer.getFPS())
 end
 
 function love.resize(w, h)

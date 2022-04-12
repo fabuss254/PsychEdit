@@ -2,7 +2,7 @@
 local Module = {}
 
 -- Import and get all instances
-function scanForFile(Directory, Out)
+local function scanForFile(Directory, Out)
     Out = Out or {}
 
     for _,v in pairs(love.filesystem.getDirectoryItems(Directory)) do
@@ -18,6 +18,7 @@ function scanForFile(Directory, Out)
 
     return Out
 end
+
 Module.Instances = scanForFile("src/classes")
 
 -- Tags

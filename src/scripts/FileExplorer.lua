@@ -9,7 +9,6 @@ local Tab = require("src/classes/advanced/Tab")
 
 local ListLayout = require("src/classes/layout/ListLayout")
 
-local UIBuilder = require("src/libs/UIBuilder")
 local Fonts = require("src/libs/Fonts")
 local UI = require("src/libs/UIEngine")
 local fs = require("src/libs/nativefs")
