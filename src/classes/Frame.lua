@@ -25,7 +25,6 @@ function class:new(x, y, w, h)
     self.ZIndex = 0
     self.LayoutOrder = 0
 
-    self.ClipDescendants = false
     self.Active = false
 
     -- UI interactive properties
@@ -39,6 +38,10 @@ function class:new(x, y, w, h)
     -- UI Ancestry
     self._Childs = {}
     self.Parent = false
+
+    -- Manage clipping
+    self.ClipDescendants = false
+    self._ClippingAncestor = false
 
     -- Others
     self.CachedData = false
@@ -76,19 +79,37 @@ function class:GetDescendants(tbl)
     return o
 end
 
-function class:SetPosition(newPos)
-    self.Position = newPos
-    self.CachedData = false
+function class:SetClipDescendants(bool)
+    if self._ClippingAncestor then return error("Cannot set ClipDescendants: Multi clipping is not supported.") end
+    if self.ClipDescendants == bool then return end
+
+    self.ClipDescendants = bool
     for _,v in pairs(self:GetDescendants()) do
-        v.CachedData = false
+        v._ClippingAncestor = bool and self or false
+    end
+end
+
+function class:Refresh()
+    self.CachedData = false
+end
+
+function class:SetPosition(newPos)
+    if self.Position == newPos then return end
+
+    self.Position = newPos
+    self:Refresh()
+    for _,v in pairs(self:GetDescendants()) do
+        v:Refresh()
     end
 end
 
 function class:SetSize(newSize)
+    if self.Size == newSize then return end
+
     self.Size = newSize
-    self.CachedData = false
+    self:Refresh()
     for _,v in pairs(self:GetDescendants()) do
-        v.CachedData = false
+        v:Refresh()
     end
 end
 
@@ -103,12 +124,27 @@ function class:SetVisible(bool)
             DescendantsIDs[v.Id] = true
         end
 
+        -- Remove from DrawMap
         while true do
             local Pass = true
             for i=1, #UI.DrawMap do
                 local v = UI.DrawMap[i]
                 if DescendantsIDs[v.Id] then
                     table.remove(UI.DrawMap, i)
+                    Pass = false
+                    break
+                end
+            end
+            if Pass then break end
+        end
+
+        -- Remove from UpdateMap
+        while true do
+            local Pass = true
+            for i=1, #UI.UpdateMap do
+                local v = UI.UpdateMap[i]
+                if DescendantsIDs[v.Id] then
+                    table.remove(UI.UpdateMap, i)
                     Pass = false
                     break
                 end
@@ -148,6 +184,16 @@ function class:SetParent(Obj)
         self.ZIndex = Obj.ZIndex + 1
     end
 
+    if self.Parent.ClipDescendants then
+        self._ClippingAncestor = self.Parent
+
+        for _,v in pairs(self:GetDescendants()) do
+            v._ClippingAncestor = self.Parent
+        end
+    elseif self.Parent._ClippingAncestor then
+        self._ClippingAncestor = self.Parent._ClippingAncestor
+    end
+
     UI.Refresh()
 end
 
@@ -155,11 +201,14 @@ function class:GetChildren()
     return self._Childs
 end
 
+function class:GetBoundaries()
+    return self:GetDrawingCoordinates()
+end
+
 function class:GetDrawingCoordinates()
     if self.CachedData then
         return self.CachedData[1], self.CachedData[2], self.CachedData[3], self.CachedData[4]
     end
-
 
     local OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = 0, 0, ScreenSize.X, ScreenSize.Y
     if self.Parent then
@@ -170,7 +219,7 @@ function class:GetDrawingCoordinates()
             return a,b,c,d
         end
 
-        OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = self.Parent:GetDrawingCoordinates()
+        OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = self.Parent:GetBoundaries()
     end
 
     local ParentPos = Vector2(OffsetX, OffsetY)
@@ -193,23 +242,74 @@ function class:GetDrawingCoordinates()
     return self.CachedData[1], self.CachedData[2], self.CachedData[3], self.CachedData[4]
 end
 
-function class:Draw()
-    local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
-
+function class:DrawInternal(PosX, PosY, ScaleX, ScaleY)
     self.Color:Apply(1-self.Opacity)
-    
-    --love.graphics.translate(PosX - ScaleX, PosY - ScaleY)
-    --love.graphics.rotate(self.Rotation)
-    --love.graphics.translate(-ScaleX, -ScaleY)
+
     love.graphics.translate(PosX, PosY)
     love.graphics.rectangle("fill", 0, 0, ScaleX, ScaleY, self.CornerRadius)
     love.graphics.origin()
+end
+
+function class:Draw()
+    local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
+
+    if self._ClippingAncestor then
+        local MaskPosX, MaskPosY, MaskScaleX, MaskScaleY = self._ClippingAncestor:GetDrawingCoordinates()
+        
+        -- Exagerate to keep objects that may not be fully rendered inside
+        MaskPosX = MaskPosX - 10
+        MaskPosY = MaskPosY - 10
+        MaskScaleX = MaskScaleX + 10
+        MaskScaleY = MaskScaleY + 10
+
+        local P1IsIn = (MaskPosX <= PosX and MaskPosX + MaskScaleX >= PosX) and (MaskPosY <= PosY and MaskPosY + MaskScaleY >= PosY)
+        local P2IsIn = (MaskPosX <= PosX+ScaleX and MaskPosX + MaskScaleX >= PosX+ScaleX) and (MaskPosY <= PosY+ScaleY and MaskPosY + MaskScaleY >= PosY+ScaleY)
+
+        if not P1IsIn and not P2IsIn then
+            if DEBUG_MODE then
+                love.graphics.translate(PosX, PosY)
+                Color.Green:Apply()
+                love.graphics.rectangle("line", 0, 0, ScaleX, ScaleY)
+                love.graphics.origin()
+            end
+            return
+        end
+
+        love.graphics.setScissor(MaskPosX+10, MaskPosY+10, MaskScaleX-10, MaskScaleY-10)
+    end
+    
+    self:DrawInternal(PosX, PosY, ScaleX, ScaleY)
+
+    -- Debug
+    if DEBUG_MODE then
+        love.graphics.translate(PosX, PosY)
+        Color.Red:Apply()
+        love.graphics.rectangle("line", 0, 0, ScaleX, ScaleY, self.CornerRadius)
+        love.graphics.origin()
+    end
+
+    if self._ClippingAncestor then
+        love.graphics.setScissor()
+    end
 end
 
 function class:IsHovering()
     local x = love.mouse.getX()
     local y = love.mouse.getY()
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
+
+    if self._ClippingAncestor then
+        local X, Y, sX, sY = self._ClippingAncestor:GetDrawingCoordinates()
+
+        if typeof(self._ClippingAncestor) == "ScrollingFrame" then
+            sX = sX - self._ClippingAncestor.ScrollbarSize
+        end
+
+        PosX = math.clamp(PosX, X, X + sX)
+        PosY = math.clamp(PosY, Y, Y + sY)
+        ScaleX = math.min(ScaleX, sX)
+        ScaleY = math.min(ScaleY, sX)
+    end
 
     local HoveringX = PosX <= x and PosX + ScaleX > x
     local HoveringY = PosY <= y and PosY + ScaleY > y
@@ -256,8 +356,14 @@ function class:Destroy()
 end
 
 function class:ClearAllChildren()
+    if not self then return end
     while #self._Childs > 0 do
-        self._Childs[1]:Destroy()
+        local s,m = pcall(function()
+            self._Childs[1]:Destroy()
+        end)
+        if not s then
+            print("ERROR::ClearAllChildren:", m)
+        end
     end
 end
 

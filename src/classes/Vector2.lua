@@ -34,6 +34,36 @@ function class:GetUnit()
     return class((x == x and x) or 0, (y == y and y) or 0)
 end
 
+function class:Lerp(p1, t)
+    t = math.clamp(t, 0, 1)
+    local new = (1-t)*self + t*p1
+    return new
+end
+
+function class:Floor()
+    self.X = math.floor(self.X)
+    self.Y = math.floor(self.Y)
+    return self
+end
+
+function class:Clamp(min, max)
+    self.X = math.clamp(self.X, min, max)
+    self.Y = math.clamp(self.Y, min, max)
+    return self
+end
+
+function class:Min(min)
+    self.X = math.min(self.X, min)
+    self.Y = math.min(self.Y, min)
+    return self
+end
+
+function class:Max(max)
+    self.X = math.max(self.X, max)
+    self.Y = math.max(self.Y, max)
+    return self
+end
+
 function class:Clone()
     return class(self.X, self.Y)
 end

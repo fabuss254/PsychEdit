@@ -19,6 +19,9 @@ class.Green = class(0, 1, 0)
 class.Blue = class(0, 0, 1)
 class.White = class(1, 1, 1)
 class.Black = class(0, 0, 0)
+class.Yellow = class(1, 1, 0)
+class.Cyan = class(0, 1, 1)
+class.Pink = class(1, 0, 1)
 
 -- METHODS
 function class.FromRGB(R,G,B)

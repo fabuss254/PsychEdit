@@ -1,8 +1,14 @@
 local Vector2 = require("src/classes/Vector2")
 
+-- This file is used to add overwrite some functions/variables in the global namespace
+
 love.graphics.setDefaultFilter('nearest', 'nearest')
 tick = love.timer.getTime
-math.clamp = function(value, min, max) return math.min(math.max(value, min), max) end
+math.clamp = function(value, min, max) 
+    if min > max then return min end
+    return math.min(math.max(value, min), max) 
+end
+
 table.find = function(tbl, obj)
     for _,v in pairs(tbl) do
         if v == obj then
@@ -10,6 +16,7 @@ table.find = function(tbl, obj)
         end
     end
 end
+
 function string.split(inputstr, sep)
     if sep == nil then
             sep = "%s"
@@ -34,4 +41,14 @@ end
 
 function typeof(obj)
     return type(obj) == "table" and obj._type or type(obj)
+end
+
+-- Mouse wheel
+WheelDelta = 0
+GetWheelDelta = function()
+    return WheelDelta
+end
+
+function love.wheelmoved(dx, dy)
+    WheelDelta = dy
 end

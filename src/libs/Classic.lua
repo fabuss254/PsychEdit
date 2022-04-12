@@ -61,8 +61,8 @@ end
 
 function Object:__call(...)
   local obj = setmetatable({}, self)
-  obj:new(...)
   obj.class = self
+  obj:new(...)
   obj._initialised = true
   return obj
 end

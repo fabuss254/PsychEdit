@@ -24,11 +24,9 @@ function class:SetText(newText)
     self.Size = UDim2(0, width, 0, height)
 end
 
-function class:Draw()
-    local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
-
+function class:DrawInternal(PosX, PosY, ScaleX, ScaleY)
     self.Color:Apply(1-self.Opacity)
-    
+
     love.graphics.translate(PosX, PosY)
     love.graphics.draw(self._TEXT, 0, 0, 0, self.Scale, self.Scale)
     love.graphics.origin()

@@ -9,6 +9,7 @@ local Tab = require("src/classes/advanced/Tab")
 
 local ListLayout = require("src/classes/layout/ListLayout")
 
+local Delay = require("src/libs/Delay")
 local Fonts = require("src/libs/Fonts")
 local UI = require("src/libs/UIEngine")
 local fs = require("src/libs/nativefs")
@@ -20,6 +21,8 @@ local List = UIBuilder.List
 local Exec = UIBuilder.Exec
 
 -- Config
+local DoubleClickInterval = 0.5
+local SelectedColor = Color.FromRGB(8, 143, 255)
 
 -- Basic windows
 local TabMenu = Tab({
@@ -27,6 +30,8 @@ local TabMenu = Tab({
     Size = Vector2(600, 400),
     Position = Vector2(ScreenSize.X/2 - 300, ScreenSize.Y/2 - 200),
 })
+
+local SelectedFrame, SelectionLastClick
 
 -- Functions
 local function ListItem(Key, Value)
@@ -39,18 +44,44 @@ local function ListItem(Key, Value)
 
     return New "Frame" {
         Name = Value,
-        Opacity = (Key%2 == 1 and 1 or 0.95),
         LayoutOrder = Key + (isDirectory and 0 or 1000) + (Name == ".." and -1000000 or 0),
+        Opacity = (Key%2 == 1 and 1 or 0.95),
         Size = UDim2(1, 0, 0, 20),
         ZIndex = TabMenu.Menu.ZIndex + 25,
 
+        [Exec] = function(self)
+            Delay.new(1/60, function()
+                self._Connections.Hover(self, false)
+            end)
+        end,
+
         [Connect "Hover"] = function(self, bool) 
-            self.Opacity = bool and 0.8 or (Key%2 == 1 and 1 or 0.95)
+            local o = self.META.LayoutKey or 0
+            local IsSelected = self == SelectedFrame
+            local OriginalColor = IsSelected and SelectedColor or Color.White
+
+            self.Color = OriginalColor
+            self.Opacity = IsSelected and (bool and 0 or .2) or bool and 0.8 or (o%2 == 1 and 1 or 0.95)
         end,
 
         [Connect "MouseClick"] = function(self, bool)
             if not bool then return end
             if not isDirectory then return end
+            if SelectedFrame ~= self then
+                local o = SelectedFrame
+                SelectionLastClick = tick()
+                SelectedFrame = self
+                self._Connections.Hover(self, false)
+
+                if o then
+                    o._Connections.Hover(o, false)
+                end
+                return
+            end
+
+            if tick() - SelectionLastClick > DoubleClickInterval then SelectionLastClick = tick() return end
+
+            SelectedFrame = nil
             local Parent = self.Parent
             Parent:ClearAllChildren()
 
@@ -72,9 +103,14 @@ local function ListItem(Key, Value)
                 table.insert(o, Value .. "..")
             end
 
+            local CanvasSizeY = 0
             for _,v in pairs(List(o, ListItem)) do
+                CanvasSizeY = CanvasSizeY + v.Size.Y.Offset
                 v:SetParent(Parent)
             end
+
+            Parent.CanvasSize = UDim2(0, 0, 0, CanvasSizeY)
+            Parent:SetCanvasPosition(Vector2(0, 0))
         end,
 
         [Children] = {
@@ -110,7 +146,7 @@ end
 
 local DahContent = {
     -- Center
-    New "Frame" {
+    New "ScrollingFrame" {
         Size = UDim2(1, 0, 1, -60),
         Anchor = Vector2(.5, .5),
         Position = UDim2(.5, 0, .5, 0),
@@ -118,8 +154,8 @@ local DahContent = {
         Color = TabMenu.Content.Color:Lerp(Color.Black, .25),
         ChildLayout = ListLayout(0),
         ZIndex = 20,
-
-        ClipDescendants = true,
+        
+        CanvasSize = UDim2(0, 0, 0, 0),
 
         [Children] = {
             List(fs.getDriveList(), ListItem) -- love.filesystem.getDirectoryItems("/")

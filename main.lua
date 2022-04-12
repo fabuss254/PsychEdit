@@ -5,10 +5,13 @@
     Description: A easy to use modchart editor for psych engine.
 --]]
 
+DEBUG_MODE = false
+
 -- Basic classes import
 local Vector2 = require("src/classes/Vector2")
 local Signal = require("src/classes/Signal")
 local Color = require("src/classes/Color")
+local Delay = require("src/libs/Delay")
 
 -- Basic lib import
 local UI = require("src/libs/UIEngine")
@@ -19,7 +22,6 @@ require("src/libs/Overwrite")
 -- Global functions
 function love.load()
     UIBuilder = require("src/libs/UIBuilder")
-    print("MAIN", UIBuilder)
 
     for i,v in pairs(love.filesystem.getDirectoryItems("src/scripts")) do
         local FileName = string.sub(v, 1, #v-4)
@@ -34,6 +36,8 @@ end
 
 function love.update(dt)
     UI.Update(dt)
+    Delay.StaticUpdate(dt)
+    WheelDelta = 0
 end
 
 function love.draw()
@@ -50,5 +54,11 @@ function love.resize(w, h)
         for _,g in pairs(v:GetDescendants()) do
             g.CachedData = false
         end
+    end
+end
+
+function love.keypressed(key, scancode, isRepeat)
+    if key == "f2" then
+        DEBUG_MODE = not DEBUG_MODE
     end
 end

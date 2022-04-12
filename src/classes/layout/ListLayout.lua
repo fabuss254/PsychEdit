@@ -19,20 +19,24 @@ function class:Execute(Frame)
     local Parent = Frame.Parent
     local DirectionAxis = self.Direction == 1 and "X" or "Y"
 
-    OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = Parent:GetDrawingCoordinates()
+    OffsetX, OffsetY, SizeOffsetX, SizeOffsetY = Parent:GetBoundaries()
     local ParentPos = Vector2(OffsetX, OffsetY)
     local ParentSize = Vector2(SizeOffsetX, SizeOffsetY)
 
     local ListOffset = 0
+    local Key = 1
     for _,v in pairs(Parent:GetChildren()) do
         if v:IsVisible() then
             if v == Frame then
                 break
             else
+                Key = Key + 1
                 ListOffset = ListOffset + v.Size:ToVector2(ParentSize) + self.Offset
             end
         end
     end
+
+    Frame.META.LayoutKey = Key
 
     local Size = Frame.Size:ToVector2(ParentSize)
     local Pos = Vector2[DirectionAxis] * ListOffset + ParentPos

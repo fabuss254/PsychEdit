@@ -23,10 +23,8 @@ function class:SetFilter(Filter)
     self.Texture:setFilter(Filter)
 end
 
-function class:Draw()
-    local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
+function class:DrawInternal(PosX, PosY, ScaleX, ScaleY)
     local TextureWidth, TextureHeight = self.Texture:getDimensions()
-
     self.Color:Apply(1-self.Opacity)
 
     love.graphics.translate(PosX + ScaleX * self.Anchor.X, PosY + ScaleY * self.Anchor.Y)

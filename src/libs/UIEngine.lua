@@ -23,30 +23,6 @@ local function SortPool(tbl)
 end
 
 -- FUNCTIONS
---[[
-function Module.Add(Obj, ZIndex)
-    if not Obj then error("Missing object argument") end
-    if not Obj.Draw then error("Object isn't drawable") end
-    rawset(Obj, "UIID", GlobalID)
-
-    table.insert(Module.Pool, Obj = Obj)
-    GlobalID = GlobalID + 1
-end
-
-function Module.Rem(Obj)
-    if not Obj then error("Missing object argument") end
-    if not rawget(Obj, "UIID") then error("Object wasn't added beforehand") end
-
-    for i,v in pairs(Module.Pool) do
-        if v.UIID == Obj.UIID then
-            rawset(v.UIID, nil)
-            table.remove(Module.Pool, i)
-            return
-        end
-    end
-    return print(("WARNING: Couldn't get object %s inside UI pool"):format(Obj.UIID))
-end
-]]
 
 function Module.RegisterUI(UIName, UI)
     Module.UIs[UIName] = UI
