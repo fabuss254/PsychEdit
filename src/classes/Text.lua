@@ -19,6 +19,7 @@ end
 
 function class:SetText(newText)
     self._TEXT:set(newText)
+    self.Text = newText
 
     local width, height = self._TEXT:getDimensions()
     self.Size = UDim2(0, width, 0, height)

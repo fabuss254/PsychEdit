@@ -194,6 +194,17 @@ function Module.Goto(Path)
     CurrentPath = Path
 end
 
+function Module.GetDirectory()
+    return CurrentPath
+end
+
+function Module.GetSelectedPath()
+    if SelectedFrame then
+        return CurrentPath .. SelectedFrame:Get("Text").Text
+    end
+    return Module.GetDirectory()
+end
+
 local DahContent = {
     -- Top
     New "Frame" {
