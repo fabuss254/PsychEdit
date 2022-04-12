@@ -55,13 +55,14 @@ function class:new(Props)
 
                 Color = MenuColor:Lerp(Color.Black, 0.5),
 
+                --[[
                 [Children] = New "Frame" {
                     Position = UDim2(1, -4, 1, -4),
                     Size = UDim2(0, 6, 0, 6),
                     Anchor = Vector2.one,
                     
                     Color = MenuColor,
-                    ZIndex = 10,
+                    ZIndex = 30,
 
                     [Connect "Hover"] = function(self, bool)
                         self.Color = bool and MenuColor:Lerp(Color.White, 0.5) or MenuColor
@@ -84,6 +85,7 @@ function class:new(Props)
                         self.Parent.Parent:SetSize(UDim2(0, math.max(NewSize.X, Props.MinSize and Props.MinSize.X or self.Parent.Parent:Get("Topbar"):Get("Text").Size.X.Offset + 50), 0, math.max(NewSize.Y, Props.MinSize and Props.MinSize.Y or 100)))
                     end
                 }
+                ]]
             },
 
             -- Topbar

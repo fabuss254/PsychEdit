@@ -111,6 +111,8 @@ local function ListItem(Key, Value)
 
             Parent.CanvasSize = UDim2(0, 0, 0, CanvasSizeY)
             Parent:SetCanvasPosition(Vector2(0, 0))
+
+            Parent.Parent:Get("Bottom"):Get("Frame"):Get("Pathbox"):Get("Text"):SetText(Value)
         end,
 
         [Children] = {
@@ -159,6 +161,75 @@ local DahContent = {
 
         [Children] = {
             List(fs.getDriveList(), ListItem) -- love.filesystem.getDirectoryItems("/")
+        }
+    },
+
+    -- Bottom
+    New "Frame" {
+        Name = "Bottom",
+        Size = UDim2(1, 0, 0, 30),
+        Position = UDim2(0, 0, 1, 0),
+        Anchor = Vector2.y,
+
+        Opacity = 1,
+
+        [Children] = New "Frame" {
+            Anchor = Vector2(.5, .5),
+            Size = UDim2(1, -10, 1, -10),
+            Position = UDim2(.5, 0, .5, 0),
+
+            ChildLayout = ListLayout(1, 5),
+
+            Opacity = 1,
+
+            [Children] = {
+                New "Frame" {
+                    Name = "Pathbox",
+                    Size = UDim2(1, -45, 1, 0),
+
+                    Color = TabMenu.Menu.Color:Lerp(Color.Black, 0.75),
+                    ZIndex = 25,
+
+                    [Children] = {
+                        New "Frame" {
+                            Position = UDim2(.5, 0, .5, 0),
+                            Size = UDim2(1, 2, 1, 2),
+                            Anchor = Vector2.one/2,
+
+                            ZIndex = 20,
+
+                            Color = TabMenu.Menu.Color,
+                        },
+                        New "Text" {
+                            Position = UDim2(0, 5, .55, 0),
+                            Anchor = Vector2.y/2,
+
+                            Text = "..",
+
+                            ZIndex = 30,
+
+                            Color = TabMenu.Menu.Color,
+                        }
+                    }
+
+                },
+                New "Frame" {
+                    Size = UDim2(0, 40, 1, 0),
+
+                    Color = TabMenu.Menu.Color,
+                    ZIndex = 25,
+
+                    [Children] = New "Text" {
+                        Position = UDim2(.5, 0, .55, 0),
+                        Anchor = Vector2.one/2,
+
+                        Text = "Open",
+                        ZIndex = 30,
+
+                        Color = Color.White,
+                    }
+                }
+            }
         }
     }
 }

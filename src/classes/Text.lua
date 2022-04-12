@@ -8,7 +8,7 @@ local Fonts = require("src/libs/Fonts")
 local class = Frame:extend("Text")
 
 function class:new(Font, x, y)
-    self.super.new(self, x, y, 0, 0, 0)
+    class.super.new(self, x, y, 0, 0, 0)
     self.Scale = 1
 
     self._TEXT = love.graphics.newText(Font or Fonts.ConsolaSmall, "TextLabel")
