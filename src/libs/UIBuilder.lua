@@ -81,6 +81,8 @@ function Module.New(InstanceName)
 end
 
 function Module.List(tbl, proc)
+    if not tbl then return end
+
     local out = {}
     for i,v in pairs(tbl) do
         local ui = proc(i, v)

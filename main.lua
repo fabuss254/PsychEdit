@@ -25,7 +25,7 @@ function love.load()
     end
     require("src/scripts/Topbar")
 
-    UI.ReloadZIndexes()
+    UI.Refresh()
 end
 
 function love.update(dt)

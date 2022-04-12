@@ -127,7 +127,5 @@ local DahContent = {
 -- Add all ui to tab's content
 for _,v in pairs(DahContent) do v:SetParent(TabMenu.Content) end
 
-UI.Add(TabMenu.Menu)
-
 -- Export
 UI.RegisterUI("File Explorer", TabMenu.Menu)

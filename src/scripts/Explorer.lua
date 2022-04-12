@@ -17,7 +17,5 @@ local TabMenu = Tab({
     Title = "Explorer"
 })
 
-UI.Add(TabMenu.Menu)
-
 -- Export
 UI.RegisterUI("Explorer", TabMenu.Menu)

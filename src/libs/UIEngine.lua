@@ -7,28 +7,29 @@ local Color = require("src/classes/Color")
 
 -- MODULE
 local Module = {}
-local GlobalID = 1
-Module.Pool = {}
+
 Module.UIs = {}
+Module.DrawMap = false
+Module.UpdateMap = false
+
 local ZIndexMenu = 0
 
 -- PRIVATE FUNCTIONS
-local function SortPool()
-    table.sort(Module.Pool, function(a, b)
+local function SortPool(tbl)
+    table.sort(tbl, function(a, b)
         return a.ZIndex < b.ZIndex
     end)
+    return tbl
 end
 
 -- FUNCTIONS
+--[[
 function Module.Add(Obj, ZIndex)
     if not Obj then error("Missing object argument") end
     if not Obj.Draw then error("Object isn't drawable") end
-    ZIndex = ZIndex or rawget(Obj, "ZIndex") or 0
     rawset(Obj, "UIID", GlobalID)
 
-    table.insert(Module.Pool, {Obj = Obj, ZIndex = ZIndex})
-    SortPool()
-
+    table.insert(Module.Pool, Obj = Obj)
     GlobalID = GlobalID + 1
 end
 
@@ -43,7 +44,9 @@ function Module.Rem(Obj)
             return
         end
     end
+    return print(("WARNING: Couldn't get object %s inside UI pool"):format(Obj.UIID))
 end
+]]
 
 function Module.RegisterUI(UIName, UI)
     Module.UIs[UIName] = UI
@@ -56,56 +59,68 @@ function Module.RegisterUI(UIName, UI)
 
     ManageZIndex({UI})
     ZIndexMenu = ZIndexMenu + 1
-    UI.Visible = false
+    UI.Visible = UIName == "Topbar"
 end
 
-function Module.ReloadZIndexes()
-    for _,v in pairs(Module.Pool) do
-        if v.Obj.ZIndex ~= v.ZIndex then
-            v.ZIndex = v.Obj.ZIndex
-        end
-    end
-
-    return SortPool()
+function Module.Refresh()
+    Module.DrawMap = false
+    Module.UpdateMap = false
 end
 
 function Module.IsAdded(Obj)
     return rawget(Obj, "UIID")
 end
 
-function Module.Update(dt)
-    for _,v in pairs(Module.Pool) do
-        if v.Obj:IsVisible() and v.Obj.class["Update"] then
-            v.Obj:Update(dt)
+function Module.GetDrawingMap(UI, UnsortedMap, NoFirst)
+    UnsortedMap = UnsortedMap or {Update = {}, Draw = {}}
+    for _,v in pairs(UI) do
+        if v.Visible then
+            UnsortedMap.Draw[#UnsortedMap.Draw+1] = v
+            if v.class["Update"] then
+                UnsortedMap.Update[v.Id] = true
+            end
+
+            UnsortedMap = Module.GetDrawingMap(v:GetChildren(), UnsortedMap, true)
         end
+    end
+
+    if not NoFirst then
+        local SortedUpdateMax = 1
+        local SortedUpdateMap = {} -- Do not sort with table.sort, but copy draw map's sorting
+        local SortedDrawMap = SortPool(UnsortedMap.Draw)
+
+        for _,v in ipairs(SortedDrawMap) do
+            if UnsortedMap.Update[v.Id] then
+                SortedUpdateMap[SortedUpdateMax] = v
+                SortedUpdateMax = SortedUpdateMax + 1
+            end
+        end
+
+        return SortedDrawMap, SortedUpdateMap
+    else
+        return UnsortedMap
+    end
+end
+
+function Module.Update(dt)
+    if not Module.DrawMap or not Module.UpdateMap then
+        Module.DrawMap, Module.UpdateMap = Module.GetDrawingMap(Module.UIs)
+    end
+
+    for _,v in ipairs(Module.UpdateMap) do
+        v:Update(dt)
     end
 end
 
 function Module.Draw()
-    --[[
-    local function DrawChild(Childs)
-        for _,v in pairs(Childs) do
-            if v.Visible then
-                v:Draw()
-                DrawChild(v:GetChildren())
-            end
-        end
-    end
-
-    for _,v in pairs(Module.Pool) do
-        DrawChild({v.Obj})
-    end
-    ]]
-    for _,v in pairs(Module.Pool) do
-        if v.Obj:IsVisible() then
-            v.Obj:Draw()
-        end
+    for _,v in ipairs(Module.DrawMap) do
+        v:Draw()
     end
 end
 
 function Module.MouseClickEvent(bool)
-    for i=#Module.Pool, 1, -1 do
-        local v = Module.Pool[i].Obj
+    for i=#Module.UpdateMap, 1, -1 do
+        local v = Module.UpdateMap[i]
 
         if v._Connections["MouseClick"] and v:IsVisible() and v:IsHovering() then
             return v._Connections["MouseClick"](v:DoReturnSelf(bool))

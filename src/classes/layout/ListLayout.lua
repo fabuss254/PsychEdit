@@ -26,7 +26,7 @@ function class:Execute(Frame)
     local ListOffset = 0
     for _,v in pairs(Parent:GetChildren()) do
         if v:IsVisible() then
-            if v.UIID == Frame.UIID then
+            if v == Frame then
                 break
             else
                 ListOffset = ListOffset + v.Size:ToVector2(ParentSize) + self.Offset

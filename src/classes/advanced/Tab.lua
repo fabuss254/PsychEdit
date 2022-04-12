@@ -70,7 +70,7 @@ function class:new(Props)
     Title:SetParent(Topbar)
 
     local Icons = {
-        {"close", function() Menu.Visible = false end}
+        {"close", function() Menu:SetVisible(false) end}
     }
     for i,v in pairs(Icons) do
         local ButtonFrame = Frame()

@@ -9,6 +9,7 @@ local ErrorMessage = require("src/libs/ErrorMessage")
 
 -- CLASS
 local class = Object:extend("Frame")
+class.CurID = 1
 class.AllowedEvents = {"Hover", "MouseClick", "Update"}
 
 function class:new(x, y, w, h)
@@ -41,6 +42,10 @@ function class:new(x, y, w, h)
     -- Others
     self.META = {}
 
+    -- Identify this frame
+    self.Id = class.CurID
+    class.CurID = class.CurID + 1
+
     return self
 end
 
@@ -53,11 +58,48 @@ function class:DoReturnSelf(...)
 end
 
 function class:Get(Name)
-    for _,v in pairs(self:GetChildren()) do
+    for _,v in ipairs(self:GetChildren()) do
         if v.Name == Name then
             return v
         end
     end
+end
+
+function class:GetDescendants(tbl)
+    local o = tbl or {}
+    for _,v in ipairs(self:GetChildren()) do
+        table.insert(o, v)
+        o = v:GetDescendants(o)
+    end
+    return o
+end
+
+function class:SetVisible(bool)
+    if self.Visible == bool then return end
+
+    if bool then
+        UI.Refresh()
+    elseif UI.DrawMap then
+        local DescendantsIDs = {[self.Id] = true}
+        for _,v in ipairs(self:GetDescendants()) do
+            DescendantsIDs[v.Id] = true
+        end
+
+        while true do
+            local Pass = true
+            for i=1, #UI.DrawMap do
+                local v = UI.DrawMap[i]
+                if DescendantsIDs[v.Id] then
+                    table.remove(UI.DrawMap, i)
+                    Pass = false
+                    break
+                end
+            end
+            if Pass then break end
+        end
+    end
+
+    self.Visible = bool
 end
 
 function class:Ratio(AspectRatio)
@@ -84,13 +126,11 @@ function class:SetParent(Obj)
     table.sort(Obj._Childs, function(a, b) return a.LayoutOrder < b.LayoutOrder end)
     self.Parent = Obj
 
-    if not UI.IsAdded(self) then
-        if self.ZIndex == 0 then
-            self.ZIndex = Obj.ZIndex + 1
-        end
-
-        UI.Add(self, self.ZIndex)
+    if self.ZIndex == 0 then
+        self.ZIndex = Obj.ZIndex + 1
     end
+
+    UI.Refresh()
 end
 
 function class:GetChildren()
@@ -129,6 +169,7 @@ function class:GetDrawingCoordinates()
 end
 
 function class:Draw()
+    if self.Opacity >= 1 then return end -- No need to draw if invisible
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
 
     self.Color:Apply(1-self.Opacity)
@@ -187,7 +228,6 @@ function class:Destroy()
     end
 
     self.Parent = nil
-    UI.Rem(self)
 end
 
 function class:ClearAllChildren()
@@ -199,6 +239,11 @@ end
 -- META METHODS
 function class:__tostring()
     return self.Name
+end
+
+function class:__eq(Obj)
+    if type(Obj) ~= "table" then return error(("Tried to compare '%s' with '%s'"):format(self._type, typeof(Obj))) end
+    return Obj.Id == self.Id
 end
 
 function class:__newindex(index, value)
