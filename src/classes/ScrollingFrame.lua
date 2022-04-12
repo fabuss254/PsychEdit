@@ -59,15 +59,57 @@ function class:SetCanvasPosition(newPos, internal)
 
     newPos = newPos:Clamp(0, self:GetMaxScroll())
     if newPos.Y == self.CanvasPosition.Y then return end
-    if math.abs(newPos.Y - self.CanvasPosition.Y) < 0.05 then newPos.Y = self.CanvasPosition.Y return end
+    if math.abs(newPos.Y - self.CanvasPosition.Y) < 0.05 then return end
 
     if not internal then
         self._SmoothPosition = newPos
     end
 
     self.CanvasPosition = newPos:Clone()
+
+    -- If there is a layout, refresh might not be required on all elements
+    if self.ChildLayout then
+        if not self.META.LastVisibleElementKey or not self:GetChildren()[self.META.LastVisibleElementKey] then
+            for i,v in pairs(self:GetChildren()) do
+                v:RefreshAll() 
+                if not v:IsClipping() then
+                    self.META.LastVisibleElementKey = i
+                end
+            end
+        else
+            local Startkey = self.META.LastVisibleElementKey
+            local Childs = self:GetChildren()
+
+            self.META.LastVisibleElementKey = nil
+
+            for i=Startkey+1, #Childs do
+                local v = Childs[i]
+                v:RefreshAll()
+                if v:IsClipping() then
+                    break
+                else
+                    self.META.LastVisibleElementKey = math.max(self.META.LastVisibleElementKey or 0, i)
+                end
+            end
+
+            for i=Startkey, 1, -1 do
+                local v = Childs[i]
+                v:RefreshAll()
+                if v:IsClipping() then
+                    if self.META.LastVisibleElementKey then
+                        break
+                    end
+                else
+                    self.META.LastVisibleElementKey = math.max(self.META.LastVisibleElementKey or 0, i)
+                end
+            end
+        end
+        
+        return
+    end
+
     for _,v in pairs(self:GetDescendants()) do
-        v:Refresh()
+        v:Refresh() 
     end
 end
 

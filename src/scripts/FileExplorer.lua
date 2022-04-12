@@ -25,6 +25,7 @@ local DoubleClickInterval = 0.5
 local SelectedColor = Color.FromRGB(8, 143, 255)
 
 -- Basic windows
+local Module = {}
 local TabMenu = Tab({
     Title = "File Explorer",
     Size = Vector2(600, 400),
@@ -32,6 +33,7 @@ local TabMenu = Tab({
 })
 
 local SelectedFrame, SelectionLastClick
+local CurrentPath
 
 -- Functions
 local function ListItem(Key, Value)
@@ -66,7 +68,6 @@ local function ListItem(Key, Value)
 
         [Connect "MouseClick"] = function(self, bool)
             if not bool then return end
-            if not isDirectory then return end
             if SelectedFrame ~= self then
                 local o = SelectedFrame
                 SelectionLastClick = tick()
@@ -78,41 +79,21 @@ local function ListItem(Key, Value)
                 end
                 return
             end
+            if not isDirectory then return end
 
             if tick() - SelectionLastClick > DoubleClickInterval then SelectionLastClick = tick() return end
 
             SelectedFrame = nil
-            local Parent = self.Parent
-            Parent:ClearAllChildren()
 
             if string.sub(Value, #Value, #Value) ~= "/" then
                 Value = Value .. "/"
             end
 
             if Name == ".." then
-                Value = string.sub(Value, 0, #Value-(4 + #Args[#Args-1]))
+                return Module.Back(Value)
             end
 
-            local o = (Value == "" and fs.getDriveList()) or fs.getDirectoryItems(Value)
-            print("Searching directory", Value)
-            for i,v in pairs(o) do
-                o[i] = Value .. v
-            end
-
-            if Value ~= "" then
-                table.insert(o, Value .. "..")
-            end
-
-            local CanvasSizeY = 0
-            for _,v in pairs(List(o, ListItem)) do
-                CanvasSizeY = CanvasSizeY + v.Size.Y.Offset
-                v:SetParent(Parent)
-            end
-
-            Parent.CanvasSize = UDim2(0, 0, 0, CanvasSizeY)
-            Parent:SetCanvasPosition(Vector2(0, 0))
-
-            Parent.Parent:Get("Bottom"):Get("Frame"):Get("Pathbox"):Get("Text"):SetText(Value)
+            Module.Goto(Value)
         end,
 
         [Children] = {
@@ -146,9 +127,109 @@ local function ListItem(Key, Value)
     }
 end
 
+local function IconButton(Order, Img, Callback)
+    return New "Frame" {
+        Size = UDim2(0, 20, 0, 20),
+
+        Color = TabMenu.Menu.Color,
+
+        LayoutOrder = Order,
+        ZIndex = 30,
+
+        [Connect "Hover"] = function(self, bool)
+            self.Color = bool and TabMenu.Menu.Color:Lerp(Color.White, .5) or TabMenu.Menu.Color
+        end,
+        [Connect "MouseClick"] = Callback and function(self, bool)
+            if bool then return end
+            Callback()
+        end,
+        
+        [Children] = New "Image" {
+            Position = UDim2(.5, 0, .5, 0),
+            Size = UDim2(.8, 0, .8, 0),
+            Anchor = Vector2.one/2,
+
+            Image = Img
+        },
+    }
+end
+
+function Module.Back(Path)
+    if Path == "../" then return end
+    local Args = string.split(Path, "/")
+    return Module.Goto(string.sub(Path, 0, #Path-(4 + #Args[#Args-1])))
+end
+
+function Module.Goto(Path)
+    if Path ~= "" then
+        Path = Path:gsub("\\", "/")
+        if Path:sub(#Path) ~= "/" then
+            Path = Path .. "/"
+        end
+    end
+
+    local Parent = TabMenu.Content:Get("Center")
+    Parent:ClearAllChildren()
+    local o = (Path == "" and fs.getDriveList()) or fs.getDirectoryItems(Path)
+            
+    print("Searching directory", Path)
+    for i,v in pairs(o) do
+        o[i] = Path .. v
+    end
+
+    if Path ~= "" then
+        table.insert(o, Path .. "..")
+    end
+
+    local CanvasSizeY = 0
+    for _,v in pairs(List(o, ListItem)) do
+        CanvasSizeY = CanvasSizeY + v.Size.Y.Offset
+        v:SetParent(Parent)
+    end
+
+    Parent.CanvasSize = UDim2(0, 0, 0, CanvasSizeY)
+    Parent:SetCanvasPosition(Vector2(0, 0))
+    TabMenu.Content:Get("Bottom"):Get("Frame"):Get("Pathbox"):Get("Text"):SetText(Path == "" and ".." or Path)
+
+    CurrentPath = Path
+end
+
 local DahContent = {
+    -- Top
+    New "Frame" {
+        Name = "Top",
+        Size = UDim2(1, 0, 0, 30),
+        Position = UDim2(0, 0, 0, 0),
+
+        Opacity = 1,
+
+        [Children] = New "Frame" {
+            Anchor = Vector2(.5, .5),
+            Size = UDim2(1, -10, 1, -10),
+            Position = UDim2(.5, 0, .5, 0),
+
+            ChildLayout = ListLayout(1, 5),
+
+            Opacity = 1,
+
+            [Children] = {
+                IconButton(1, "assets/images/icons/back_icon.png", function() Module.Back(CurrentPath .. "../") end),
+                IconButton(2, "assets/images/icons/storage_icon.png", function() Module.Goto("") end),
+                IconButton(3, "assets/images/icons/home_icon.png", function() Module.Goto(fs.getWorkingDirectory()) end),
+                IconButton(4, "assets/images/icons/document_icon.png", function() Module.Goto(love.filesystem.getUserDirectory() .. "Documents/") end),
+                IconButton(11, "assets/images/icons/refresh_icon.png", function() Module.Goto(CurrentPath) end),
+                New "Frame" {
+                    Opacity = 1,
+                    Size = UDim2(1, -125, 1, 0),
+                    LayoutOrder = 10
+                }
+            }
+        }
+    },
+
     -- Center
     New "ScrollingFrame" {
+        Name = "Center",
         Size = UDim2(1, 0, 1, -60),
         Anchor = Vector2(.5, .5),
         Position = UDim2(.5, 0, .5, 0),
@@ -158,10 +239,6 @@ local DahContent = {
         ZIndex = 20,
         
         CanvasSize = UDim2(0, 0, 0, 0),
-
-        [Children] = {
-            List(fs.getDriveList(), ListItem) -- love.filesystem.getDirectoryItems("/")
-        }
     },
 
     -- Bottom
@@ -239,3 +316,6 @@ for _,v in pairs(DahContent) do v:SetParent(TabMenu.Content) end
 
 -- Export
 UI.RegisterUI("File Explorer", TabMenu.Menu)
+
+-- Launch
+Module.Goto(fs.getWorkingDirectory():gsub("\\", "/") .. "/")

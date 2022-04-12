@@ -84,7 +84,9 @@ function Module.Update(dt)
     end
 
     for _,v in ipairs(Module.UpdateMap) do
-        v:Update(dt)
+        if not v:IsClipping() then
+            v:Update(dt)
+        end
     end
 end
 

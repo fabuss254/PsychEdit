@@ -91,6 +91,14 @@ end
 
 function class:Refresh()
     self.CachedData = false
+    self.META.ClipCache = nil
+end
+
+function class:RefreshAll()
+    self:Refresh()
+    for _,v in pairs(self:GetDescendants()) do
+        v:Refresh()
+    end
 end
 
 function class:SetPosition(newPos)
@@ -99,7 +107,9 @@ function class:SetPosition(newPos)
     self.Position = newPos
     self:Refresh()
     for _,v in pairs(self:GetDescendants()) do
-        v:Refresh()
+        if not v:IsClipping() then
+            v:Refresh()
+        end
     end
 end
 
@@ -205,6 +215,24 @@ function class:GetBoundaries()
     return self:GetDrawingCoordinates()
 end
 
+function class:IsClipping()
+    if not self._ClippingAncestor then return end
+    if self.META.ClipCache then return self.META.ClipCache end
+    local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
+    local MaskPosX, MaskPosY, MaskScaleX, MaskScaleY = self._ClippingAncestor:GetDrawingCoordinates()
+
+    -- Exagerate to keep objects that may not be fully rendered inside
+    MaskPosX = MaskPosX - 10
+    MaskPosY = MaskPosY - 10
+    MaskScaleX = MaskScaleX + 10
+    MaskScaleY = MaskScaleY + 10
+
+    local P1IsIn = (MaskPosX <= PosX and MaskPosX + MaskScaleX >= PosX) and (MaskPosY <= PosY and MaskPosY + MaskScaleY >= PosY)
+    local P2IsIn = (MaskPosX <= PosX+ScaleX and MaskPosX + MaskScaleX >= PosX+ScaleX) and (MaskPosY <= PosY+ScaleY and MaskPosY + MaskScaleY >= PosY+ScaleY)
+    self.META.ClipCache = not P1IsIn and not P2IsIn
+    return self.META.ClipCache
+end
+
 function class:GetDrawingCoordinates()
     if self.CachedData then
         return self.CachedData[1], self.CachedData[2], self.CachedData[3], self.CachedData[4]
@@ -254,18 +282,7 @@ function class:Draw()
     local PosX, PosY, ScaleX, ScaleY = self:GetDrawingCoordinates()
 
     if self._ClippingAncestor then
-        local MaskPosX, MaskPosY, MaskScaleX, MaskScaleY = self._ClippingAncestor:GetDrawingCoordinates()
-        
-        -- Exagerate to keep objects that may not be fully rendered inside
-        MaskPosX = MaskPosX - 10
-        MaskPosY = MaskPosY - 10
-        MaskScaleX = MaskScaleX + 10
-        MaskScaleY = MaskScaleY + 10
-
-        local P1IsIn = (MaskPosX <= PosX and MaskPosX + MaskScaleX >= PosX) and (MaskPosY <= PosY and MaskPosY + MaskScaleY >= PosY)
-        local P2IsIn = (MaskPosX <= PosX+ScaleX and MaskPosX + MaskScaleX >= PosX+ScaleX) and (MaskPosY <= PosY+ScaleY and MaskPosY + MaskScaleY >= PosY+ScaleY)
-
-        if not P1IsIn and not P2IsIn then
+        if self:IsClipping() then
             if DEBUG_MODE then
                 love.graphics.translate(PosX, PosY)
                 Color.Green:Apply()
@@ -275,7 +292,7 @@ function class:Draw()
             return
         end
 
-        love.graphics.setScissor(MaskPosX+10, MaskPosY+10, MaskScaleX-10, MaskScaleY-10)
+        love.graphics.setScissor(self._ClippingAncestor:GetDrawingCoordinates())
     end
     
     self:DrawInternal(PosX, PosY, ScaleX, ScaleY)
