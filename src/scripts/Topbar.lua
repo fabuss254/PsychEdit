@@ -34,6 +34,7 @@ end
 local Buttons = {
     {"File", {
         {"Open"},
+        false,
         {"Save"},
         {"Save As..."}
     }},
@@ -59,7 +60,22 @@ local Buttons = {
 
 -- Functions
 local function SubmenuItem(Key, Value)
-    if not Value then return end
+    if not Value then 
+        return New "Frame" {
+            Size = UDim2(1, 0, 0, 14),
+            LayoutOrder = Key,
+            Opacity = 1,
+
+            [Children] = New "Frame" {
+                Position = UDim2(.5, 0, .5, 0),
+                Size = UDim2(1, 0, 0, 2),
+                Anchor = Vector2.one/2,
+
+                Color = TopbarColor:Lerp(Color.Black, 0.2),
+                ZIndex = BaseZIndex + 10,
+            }
+        }
+    end
     return New "Frame" {
         Color = ButtonColor,
         Opacity = 1,
@@ -107,8 +123,13 @@ local function Submenu(Tbl)
         [Exec] = function(self)
             local ContentSize = Vector2()
             for _,v in pairs(self:GetChildren()) do
-                ContentSize.X = math.max(v:Get("Text").Size.X.Offset + 20, ContentSize.X)
-                ContentSize.Y = ContentSize.Y + (v:Get("Text").Size.Y.Offset + 10)
+                local txt = v:Get("Text")
+                if not txt then
+                    ContentSize.Y = ContentSize.Y + v.Size.Y.Offset
+                else
+                    ContentSize.X = math.max(txt.Size.X.Offset + 20, ContentSize.X)
+                    ContentSize.Y = ContentSize.Y + (txt.Size.Y.Offset + 10)
+                end
             end
 
             self.Size = UDim2(0, ContentSize.X, 0, ContentSize.Y)
