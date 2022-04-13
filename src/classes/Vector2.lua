@@ -78,6 +78,10 @@ function class.__eq(a, b)
     return a.X == b.X and a.Y == b.Y
 end
 
+function class:__unm()
+    return self*-1
+end
+
 function class.__add(a, b)
     local err = "unable to perform arithmetic (add) on " .. typeof(a) .. " and " .. typeof(b)
     assert(typeof(b) == "Vector2" or typeof(b) == "number", err)

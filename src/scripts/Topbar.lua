@@ -33,9 +33,7 @@ end
 local Buttons = {
     {"File", {
         {"Open", EnableUI("File Explorer")},
-        false,
-        {"Save"},
-        {"Save As..."}
+        {"Save"}
     }},
     {"Edit"},
     {"Windows", {

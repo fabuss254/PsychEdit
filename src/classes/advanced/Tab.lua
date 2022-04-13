@@ -9,20 +9,84 @@ local Object = require("src/libs/Classic")
 
 local ListLayout = require("src/classes/layout/ListLayout")
 
+local Cursor = require("src/libs/Cursor")
 local Fonts = require("src/libs/Fonts")
 local UI = require("src/libs/UIEngine")
+
+local New, Children, Connect, List, Exec
+
+-- Function
+function ResizeItem(Position, Size, Anchor, Axis, ChangeAnchor, MinSize)
+    return New "Frame" {
+        Position = Position,
+        Size = Size,
+        Anchor = Anchor,
+
+        Opacity = 1,
+
+        ZIndex = 100,
+
+        [Connect "Hover"] = function(self, bool)
+            local Cs
+            if bool then
+                if Axis.Y == 0 then
+                    Cs = Cursor.sizewe
+                elseif Axis == Vector2.y then
+                    Cs = Cursor.sizens
+                elseif Axis == Vector2.one then
+                    Cs = Cursor.sizenwse
+                else
+                    Cs = Cursor.sizenesw
+                end
+            end
+
+            love.mouse.setCursor(Cs)
+            self.Opacity = bool and 0.9 or 1
+        end,
+
+        [Connect "MouseClick"] = function(self, bool)
+            if not bool then return end
+            self.META.Holding = {GetMousePosition(), self.Parent.Size:Clone(), self.Parent.Position:ToVector2(ScreenSize)}
+        end,
+
+        [Connect "Update"] = function(self, dt)
+            if not self.META.Holding then return end
+            if not love.mouse.isDown(1) then
+                self.META.Holding = false
+                return
+            end
+
+            local MousePos = GetMousePosition()
+            local Delta = MousePos - self.META.Holding[1]
+
+            local newSize = Vector2(self.META.Holding[2].X.Offset+Delta.X*Axis.X, self.META.Holding[2].Y.Offset+Delta.Y*Axis.Y)
+            self.Parent:SetSize(UDim2(0, math.max(newSize.X, MinSize.X), 0, math.max(newSize.Y, MinSize.Y)))
+
+            if ChangeAnchor then
+                --Delta.X = Delta.X + (newSize.X - MinSize.X)
+                if newSize.X <= MinSize.X then Delta.X = Delta.X-(MinSize.X - newSize.X) end
+
+                local newPosition = UDim2(0, self.META.Holding[3].X-Delta.X*Axis.X, 0, self.META.Holding[3].Y)
+                self.Parent:SetPosition(newPosition)
+            end
+        end,
+    }
+end
 
 -- Class
 local class = Object:extend("Tab")
 
 function class:new(Props)
-    local New = UIBuilder.New
-    local Children = UIBuilder.Children
-    local Connect = UIBuilder.Connect
-    local List = UIBuilder.List
-    local Exec = UIBuilder.Exec
+    -- Ugly hack to access UIBuilder inside an element the UIBuilder load.
+    New = UIBuilder.New
+    Children = UIBuilder.Children
+    Connect = UIBuilder.Connect
+    List = UIBuilder.List
+    Exec = UIBuilder.Exec
 
     Props = Props or {}
+
+    local MinSize = Vector2(Props.MinSize and Props.MinSize.X or 200, Props.MinSize and Props.MinSize.Y or 200)
 
     local MenuSize = UDim2(0, Props.Size and Props.Size.X or 300, 0, Props.Size and Props.Size.Y or 300)
     local MenuPos = UDim2(0, Props.Position and Props.Position.X or (ScreenSize.X/2 - MenuSize.X.Offset/2), 0, Props.Position and Props.Position.Y or (ScreenSize.Y/2 - MenuSize.Y.Offset/2))
@@ -54,38 +118,6 @@ function class:new(Props)
                 Anchor = Vector2(.5, 1),
 
                 Color = MenuColor:Lerp(Color.Black, 0.5),
-
-                --[[
-                [Children] = New "Frame" {
-                    Position = UDim2(1, -4, 1, -4),
-                    Size = UDim2(0, 6, 0, 6),
-                    Anchor = Vector2.one,
-                    
-                    Color = MenuColor,
-                    ZIndex = 30,
-
-                    [Connect "Hover"] = function(self, bool)
-                        self.Color = bool and MenuColor:Lerp(Color.White, 0.5) or MenuColor
-                    end,
-
-                    [Connect "MouseClick"] = function(self, bool)
-                        if not bool then return end
-                
-                        self.META.Holding = true
-                    end,
-                
-                    [Connect "Update"] = function(self, dt)
-                        if not self.META.Holding then return end
-                        if not love.mouse.isDown(1) then
-                            self.META.Holding = false
-                            return
-                        end
-                
-                        local NewSize = GetMousePosition() - self.Parent.Parent.Position:ToVector2(ScreenSize) + Vector2(8, 8)
-                        self.Parent.Parent:SetSize(UDim2(0, math.max(NewSize.X, Props.MinSize and Props.MinSize.X or self.Parent.Parent:Get("Topbar"):Get("Text").Size.X.Offset + 50), 0, math.max(NewSize.Y, Props.MinSize and Props.MinSize.Y or 100)))
-                    end
-                }
-                ]]
             },
 
             -- Topbar
@@ -151,7 +183,16 @@ function class:new(Props)
                         }
                     }
                 }
-            }
+            },
+
+            -- // ResizeFrames
+            ResizeItem(UDim2(.5, 0, 1, 0), UDim2(1, -15, 0, 6), Vector2.one/2, Vector2.y, false, MinSize),
+            ResizeItem(UDim2(0, 0, .5, 5), UDim2(0, 6, 1, -25), Vector2.one/2, -Vector2.x, true, MinSize),
+            ResizeItem(UDim2(1, 0, .5, 5), UDim2(0, 6, 1, -25), Vector2.one/2, Vector2.x, false, MinSize),
+
+            -- Corners
+            ResizeItem(UDim2(1, 0, 1, 0), UDim2(0, 15, 0, 15), Vector2.one/2, Vector2.one, false, MinSize),
+            ResizeItem(UDim2(0, 0, 1, 0), UDim2(0, 15, 0, 15), Vector2.one/2, Vector2(-1, 1), true, MinSize),
         }
     }
 

@@ -30,6 +30,7 @@ local TabMenu = Tab({
     Title = "File Explorer - Open project",
     Size = Vector2(600, 400),
     Position = Vector2(ScreenSize.X/2 - 300, ScreenSize.Y/2 - 200),
+    MinSize = Vector2(300, 300)
 })
 
 local SelectedFrame, SelectionLastClick
@@ -189,7 +190,7 @@ function Module.Goto(Path)
 
     Parent.CanvasSize = UDim2(0, 0, 0, CanvasSizeY)
     Parent:SetCanvasPosition(Vector2(0, 0))
-    TabMenu.Content:Get("Bottom"):Get("Frame"):Get("Pathbox"):Get("Text"):SetText(Path == "" and ".." or Path)
+    TabMenu.Content:Get("Bottom"):Get("Frame"):Get("Pathbox"):Get("TextContainer"):Get("Text"):SetText(Path == "" and ".." or Path)
 
     CurrentPath = Path
 end
@@ -288,16 +289,24 @@ local DahContent = {
 
                             Color = TabMenu.Menu.Color,
                         },
-                        New "Text" {
-                            Position = UDim2(0, 5, .55, 0),
-                            Anchor = Vector2.y/2,
+                        New "Frame" {
+                            Name = "TextContainer",
+                            Size = UDim2(1, 0, 1, 0),
+                            Opacity = 1,
+                            ClipDescendants = true,
 
-                            Text = "..",
-
-                            ZIndex = 30,
-
-                            Color = TabMenu.Menu.Color,
-                        }
+                            [Children] = New "Text" {
+                                Position = UDim2(0, 5, .55, 0),
+                                Anchor = Vector2.y/2,
+    
+                                Text = "..",
+    
+                                ZIndex = 30,
+    
+                                Color = TabMenu.Menu.Color,
+                            }
+                        },
+                        
                     }
 
                 },

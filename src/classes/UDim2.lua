@@ -17,6 +17,10 @@ function class:ToVector2(Scale)
     return Vector2(self.X.Scale * Scale.X + self.X.Offset, self.Y.Scale * Scale.Y + self.Y.Offset)
 end
 
+function class:Clone()
+    return class(self.X.Scale, self.X.Offset, self.Y.Scale, self.Y.Offset)
+end
+
 -- METATABLES
 function class:__tostring()
     return string.format("UDim2(%i, %i, %i, %i)", self.X.Scale, self.X.Offset, self.Y.Scale, self.Y.Offset)
