@@ -16,6 +16,9 @@ local Delay = require("src/libs/Delay")
 -- Basic lib import
 local UI = require("src/libs/UIEngine")
 
+-- Import FNF emulator
+local Emulator = require("src/emulator/main")
+
 -- Global overwrites
 require("src/libs/Overwrite")
 
@@ -31,10 +34,12 @@ function love.load()
     end
     require("src/scripts/Topbar")
 
+    Emulator.Load()
     UI.Refresh()
 end
 
 function love.update(dt)
+    Emulator.Update(dt)
     UI.Update(dt)
     Delay.StaticUpdate(dt)
     WheelDelta = 0
@@ -58,6 +63,8 @@ function love.resize(w, h)
 end
 
 function love.keypressed(key, scancode, isRepeat)
+    Emulator.Keypressed(key, scancode, isRepeat)
+
     if key == "f2" then
         DEBUG_MODE = not DEBUG_MODE
     end

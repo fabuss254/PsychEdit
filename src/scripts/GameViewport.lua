@@ -22,8 +22,17 @@ local Exec = UIBuilder.Exec
 
 -- Basic windows
 local TabMenu = Tab({
-    Title = "Explorer"
+    Title = "Game Viewport"
 })
+TabMenu.Menu:Ratio(16/9)
+
+local InContent = New "Frame" {
+    Size = UDim2(1, 0, 1, 0),
+    
+    ZIndex = 10,
+}
+
+InContent:SetParent(TabMenu.Content);
 
 -- Export
-UI.RegisterUI("Explorer", TabMenu.Menu)
+UI.RegisterUI("Viewport", TabMenu.Menu)

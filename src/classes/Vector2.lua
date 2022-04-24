@@ -1,5 +1,6 @@
 -- LIBS
 local Object = require("src/libs/Classic") 
+local UDim2
 
 -- CLASS
 local class = Object:extend("Vector2")
@@ -62,6 +63,14 @@ function class:Max(max)
     self.X = math.max(self.X, max)
     self.Y = math.max(self.Y, max)
     return self
+end
+
+function class:ToUDim2Scale(ParentScale)
+    if not UDim2 then
+        UDim2 = require("src/classes/UDim2")
+    end
+
+    return UDim2(self.X/ParentScale.X, 0, self.Y/ParentScale.Y, 0)
 end
 
 function class:Clone()
